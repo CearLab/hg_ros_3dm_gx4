@@ -13,8 +13,8 @@ int main()
 {
   hg_3dm_gx4::Hg3dmGx4 imu;
   //if(imu.openPort("/dev/pts/16", 115200))
-  if(imu.openPort("/dev/ttyUSB0", 115200))
-  //if(imu.openPort("/dev/ttyS0", 115200))
+  //if(imu.openPort("/dev/ttyUSB0", 115200))
+  if(imu.openPort("/dev/ttyS0", 115200))
   {
     try
     {
@@ -22,7 +22,7 @@ int main()
 
       imu.idle();
 
-      static const int decimation = (500/100);
+      static const int decimation = (500/500);
 
       imu.setIMUDataRate(decimation, //(500 / 1) for 3DM-GX4-45
                          hg_3dm_gx4::IMUData::SCALED_ACCELEROMETER |
@@ -37,12 +37,17 @@ int main()
                         //hg_3dm_gx4::EFData::FILTER_STATUS |
                         0);
 
+      imu.setGPSDataRate(1,
+                         hg_3dm_gx4::GPSData::FIX_INFORMATION |
+                         0);
+
       imu.selectDataStream(
                            //hg_3dm_gx4::DataStream::IMU_DATA |
                            hg_3dm_gx4::DataStream::EF_DATA |
+                           //hg_3dm_gx4::DataStream::GPS_DATA |
                            0);
 
-      //imu.resume();
+      imu.resume();
 
       //imu.initializeFilterWithMagneto();
 

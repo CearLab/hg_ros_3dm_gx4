@@ -85,7 +85,7 @@ namespace hg_3dm_gx4
 
   static const uint8_t FILED_GPS_HARDWARE_STATUS = 0x0D;
   static const uint8_t FILED_DGPS_INFORMATION = 0x0E;
-  static const uint8_t FILED_DGPS_CHANNEL_STATUS = 0x0E;
+  static const uint8_t FILED_DGPS_CHANNEL_STATUS = 0x0F;
 
   //EF Data field
   static const uint8_t FIELD_EF_FILTER_STATUS = 0x10;
@@ -139,6 +139,30 @@ namespace hg_3dm_gx4
       GPS_CORRELATION_TIMESTAMP = (1 << 6),
 
       NUM_IMU_DATA = 7
+    };
+  };
+
+  struct GPSData
+  {
+    enum
+    {
+      LLH_POSITION = (1 << 0),
+      ECEF_POSITION = (1 << 1),
+      NED_VELOCITY = (1 << 2),
+      ECEF_VELOCITY = (1 << 3),
+      DOP_DATA = (1 << 4),
+
+      UTC_TIME = (1 << 5),
+      TIME = (1 << 6),
+      CLOCK_INFORMATION = (1 << 7),
+      FIX_INFORMATION = (1 << 8),
+      SPACE_VEHICLE_INFORMATION = (1 << 9),
+
+      HARDWARE_STATUS = (1 << 10),
+      DGPS_INFORMATION = (1 << 11),
+      DGPS_CHANNEL_STATUS = (1 << 12),
+
+      NUM_GPS_DATA = 13
     };
   };
 
@@ -228,8 +252,8 @@ namespace hg_3dm_gx4
     };
 
     MIP(uint8_t desc = 0) :
-        sync1(SYNC1), sync2(SYNC2), descriptor(desc), length(0), crc(0), payload(MAX_PAYLOAD, 0), field_length_position_(
-            0), is_encoding_(false)
+        sync1(SYNC1), sync2(SYNC2), descriptor(desc), length(0), crc(0), payload(MAX_PAYLOAD, 0),
+        field_length_position_(0), message_positon_(2) , is_encoding_(false)
     {
 
     }
@@ -237,6 +261,7 @@ namespace hg_3dm_gx4
     void reset()
     {
       field_length_position_ = 0;
+      message_positon_ = 2;
       is_encoding_ = false;
     }
 
@@ -327,6 +352,7 @@ namespace hg_3dm_gx4
     void nextField()
     {
       field_length_position_ += payload[field_length_position_];
+      message_positon_= 2;
     }
 
     template<typename T>
@@ -339,7 +365,7 @@ namespace hg_3dm_gx4
         {
           if (sizeof(T) == 1)
           {
-            output[i] = payload[i];
+            output[i] = payload[field_length_position_ + message_positon_ + i];
           }
           else
           {
@@ -350,13 +376,15 @@ namespace hg_3dm_gx4
             for (int j = 0; j < sizeof(T); j++)
             {
   #ifdef HOST_LITTLE_ENDIAN
-              *(p - j) = payload[(field_length_position_+2) + (i*sizeof(T)) + j];
+              *(p - j) = payload[(field_length_position_ + message_positon_) + (i * sizeof(T)) + j];
   #else
-              *(p + j) = payload[(field_length_position_ + 2) + (i * sizeof(T)) + j];
+              *(p + j) = payload[(field_length_position_ + message_positon_) + (i * sizeof(T)) + j];
   #endif
             }
           }
         }
+
+        message_positon_ += sz;
       }
 
     void updateCheckSum()
@@ -408,7 +436,8 @@ namespace hg_3dm_gx4
     }
 
   private:
-    uint8_t field_length_position_;
+    uint8_t  field_length_position_;
+    uint8_t message_positon_;
     bool is_encoding_;
   };
 

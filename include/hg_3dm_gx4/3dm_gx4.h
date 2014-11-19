@@ -15,7 +15,7 @@
 namespace hg_3dm_gx4
 {
 
-static const unsigned int COMMAND_RW_TIMEOUT = 100;
+static const unsigned int COMMAND_RW_TIMEOUT = 2000;
 
 class CommandError : public std::runtime_error
 {
@@ -63,7 +63,7 @@ public:
   void selectBaudRate(unsigned int baud);
 
   void setIMUDataRate(unsigned int decimation, const std::bitset<IMUData::NUM_IMU_DATA>& sources);
-  void setGPSDataRate(unsigned int decimation, const std::bitset<13>& sources);
+  void setGPSDataRate(unsigned int decimation, const std::bitset<GPSData::NUM_GPS_DATA>& sources);
   void setEFDataRate(unsigned int decimation, const std::bitset<EFData::NUM_EF_DATA>& sources);
 
   void selectDataStream(const std::bitset<3>& streams);

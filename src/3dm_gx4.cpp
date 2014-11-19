@@ -144,6 +144,59 @@ void Hg3dmGx4::setIMUDataRate(unsigned int decimation, const std::bitset<IMUData
   sendAndReceivePacket(p);
 }
 
+void Hg3dmGx4::setGPSDataRate(unsigned int decimation, const std::bitset<GPSData::NUM_GPS_DATA>& sources)
+{
+  static const uint8_t data_fields[] =
+  {
+    FILED_GPS_LLH_POSITION,
+    FILED_GPS_ECEF_POSITION,
+    FILED_GPS_NED_VELOCITY,
+    FILED_GPS_ECEF_VELOCITY,
+    FILED_GPS_DOP_DATA,
+
+    FILED_GPS_UTC_TIME,
+    FILED_GPS_TIME,
+    FILED_GPS_CLOCK_INFORMATION,
+    FILED_GPS_FIX_INFORMATION,
+    FILED_GPS_SPACE_VEHICLE_INFORMATION,
+
+    FILED_GPS_HARDWARE_STATUS,
+    FILED_DGPS_INFORMATION,
+    FILED_DGPS_CHANNEL_STATUS
+  };
+
+  assert(sizeof(data_fields) == sources.size());
+
+  std::vector<uint8_t> fields;
+
+  for(int i = 0; i < sources.size(); i++)
+  {
+    if(sources[i])
+    {
+      fields.push_back(data_fields[i]);
+    }
+  }
+
+  MIP p(CMD_CLASS_3DM);
+  p.beginField(CMD_GPS_MESSAGE_FORMAT);
+  p.append(FUNCTION_APPLY);
+  p.append(u8(fields.size()));
+
+  for(int i = 0; i < fields.size(); i++)
+  {
+    p.append(fields[i]);
+    p.append(u16(decimation));
+  }
+
+  p.endField();
+  p.updateCheckSum();
+
+  //std::cout << p.toString() << std::endl;
+
+  sendAndReceivePacket(p);
+
+}
+
 void Hg3dmGx4::setEFDataRate(unsigned int decimation, const std::bitset<EFData::NUM_EF_DATA>& sources)
 {
   static const uint8_t data_fields[] =
@@ -473,7 +526,39 @@ void Hg3dmGx4::processIMUPacket()
 
 void Hg3dmGx4::processGPSPacket()
 {
-  std::cout << __FUNCTION__ << std::endl;
+  //std::cout << __FUNCTION__ << std::endl;
+  while (true)
+  {
+    switch (received_packet_.getFieldDescriptor())
+    {
+      case FILED_GPS_LLH_POSITION: break;
+      case FILED_GPS_ECEF_POSITION: break;
+      case FILED_GPS_NED_VELOCITY: break;
+      case FILED_GPS_ECEF_VELOCITY: break;
+      case FILED_GPS_DOP_DATA: break;
+
+      case FILED_GPS_UTC_TIME: break;
+      case FILED_GPS_TIME: break;
+      case FILED_GPS_CLOCK_INFORMATION: break;
+      case FILED_GPS_FIX_INFORMATION:
+      {
+        uint8_t d12[2];
+        uint16_t d34[2];
+        received_packet_.extract(2, d12);
+        received_packet_.extract(2, d34);
+        printf("gps: 0x%02x 0x%02x 0x%04x 0x%04x\n", d12[0], d12[1], d34[0], d34[1]);
+        break;
+      }
+      case FILED_GPS_SPACE_VEHICLE_INFORMATION: break;
+
+      case FILED_GPS_HARDWARE_STATUS: break;
+      case FILED_DGPS_INFORMATION: break;
+      case FILED_DGPS_CHANNEL_STATUS: break;
+      default:
+        return;
+    }
+    received_packet_.nextField();
+  }
 }
 
 void Hg3dmGx4::processEFPacket()
