@@ -7,6 +7,8 @@
 
 #include <hg_3dm_gx4/3dm_gx4.h>
 
+using namespace std;
+
 int main()
 {
   hg_3dm_gx4::Hg3dmGx4 imu;
@@ -14,8 +16,29 @@ int main()
   if(imu.openPort("/dev/ttyUSB0", 115200))
   //if(imu.openPort("/dev/ttyS0", 115200))
   {
-    imu.ping();
-    imu.selectBaudRate(460800);
+    try
+    {
+      imu.ping();
+
+      imu.idle();
+
+      imu.setIMUDataRate(1, //(500 / 1) for 3DM-GX4-45
+                         hg_3dm_gx4::IMUData::SCALED_ACCELEROMETER |
+                         hg_3dm_gx4::IMUData::SCALED_GYRO |
+                         hg_3dm_gx4::IMUData::SCALED_MAGNETO);
+
+      cout << imu.receivedPacket().toString() << endl;
+
+
+
+      imu.selectDataStream(hg_3dm_gx4::DataStream::IMU_DATA);
+
+      imu.resume();
+
+      imu.receiveDataStream();
+
+
+    //imu.selectBaudRate(460800);
     /*
     sleep(1);
     imu.idle();
@@ -31,6 +54,11 @@ int main()
     imu.ping();
     sleep(1);
     */
+    }
+    catch (std::exception& e)
+    {
+      std::cout << e.what() << std::endl;
+    }
   }
   else
   {
