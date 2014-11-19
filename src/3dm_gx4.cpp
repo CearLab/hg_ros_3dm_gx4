@@ -16,44 +16,36 @@ using namespace hg_3dm_gx4;
 void Hg3dmGx4::ping()
 {
   MIP p(CMD_CLASS_BASE);
-  p.length = 2;
-  p.payload[0] = 2;
-  p.payload[1] = CMD_PING;
+  p.beginField(CMD_PING);
+  p.endField();
   p.updateCheckSum();
-
   sendAndReceivePacket(p);
 }
 
 void Hg3dmGx4::idle()
 {
   MIP p(CMD_CLASS_BASE);
-  p.length = 2;
-  p.payload[0] = 2;
-  p.payload[1] = CMD_IDLE;
+  p.beginField(CMD_IDLE);
+  p.endField();
   p.updateCheckSum();
-
   sendAndReceivePacket(p);
 }
 
 void Hg3dmGx4::resume()
 {
   MIP p(CMD_CLASS_BASE);
-  p.length = 2;
-  p.payload[0] = 2;
-  p.payload[1] = CMD_RESUME;
+  p.beginField(CMD_RESUME);
+  p.endField();
   p.updateCheckSum();
-
   sendAndReceivePacket(p);
 }
 
 void Hg3dmGx4::reset()
 {
   MIP p(CMD_CLASS_BASE);
-  p.length = 2;
-  p.payload[0] = 2;
-  p.payload[1] = CMD_RESET;
+  p.beginField(CMD_RESET);
+  p.endField();
   p.updateCheckSum();
-
   sendAndReceivePacket(p);
 }
 
@@ -108,7 +100,7 @@ void Hg3dmGx4::selectBaudRate(unsigned int baud)
   }
 }
 
-void Hg3dmGx4::setIMUDataRate(unsigned int decimation, const std::bitset<7>& sources)
+void Hg3dmGx4::setIMUDataRate(unsigned int decimation, const std::bitset<IMUData::NUM_IMU_DATA>& sources)
 {
   static const uint8_t data_fields[] =
   {
@@ -147,22 +139,50 @@ void Hg3dmGx4::setIMUDataRate(unsigned int decimation, const std::bitset<7>& sou
   p.endField();
   p.updateCheckSum();
 
-  std::cout << p.toString() << std::endl;
+  //std::cout << p.toString() << std::endl;
 
   sendAndReceivePacket(p);
 }
 
-void Hg3dmGx4::setEFDataRate(unsigned int decimation, const std::bitset<7>& sources)
+void Hg3dmGx4::setEFDataRate(unsigned int decimation, const std::bitset<EFData::NUM_EF_DATA>& sources)
 {
   static const uint8_t data_fields[] =
   {
-    FILED_IMU_SCALED_ACCELEROMETER,
-    FILED_IMU_SCALED_GYRO,
-    FILED_IMU_SCALED_MAGNETO,
-    FILED_IMU_SCALED_PRESSURE,
-    FILED_IMU_DELTA_THETA,
-    FILED_IMU_DELTA_VELOCITY,
-    FILED_IMU_GPS_CORRELATION_TIMESTAMP
+    FIELD_EF_FILTER_STATUS,
+    FIELD_EF_GPS_TIMESTAMP,
+    FIELD_EF_LLH_POSITION,
+    FIELD_EF_NED_VELOCITY,
+    FIELD_EF_ORIENTATION_QUATERNION,
+
+    FIELD_EF_ORIENTATION_MATRIX,
+    FIELD_EF_ORIENTATION_EULER,
+    FIELD_EF_GYRO_BIAS,
+    FIELD_EF_ACCEL_BIAS,
+    FIELD_EF_LLH_POSITION_UNCERTAINTY,
+
+    FIELD_EF_NED_VELOCITY_UNCERTAINTY,
+    FIELD_EF_ALTITUDE_UNCERTAINTY,
+    FIELD_EF_GYRO_BIAS_UNCERTAINTY,
+    FIELD_EF_ACCEL_BIAS_UNCERTAINTY,
+    FIELD_EF_LINEAER_ACCELERATION,
+
+    FIELD_EF_COMPENSATED_ACCELERATION,
+    FIELD_EF_COMPENSATED_ANGULAR_RATE,
+    FIELD_EF_WGS84_LOCAL_GRAVITY_MAGNITUDE,
+    FIELD_EF_ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT,
+    FIELD_EF_GRAVITY_VECTOR,
+
+    FIELD_EF_HEADING_UPDATE_SOURCE_STATE,
+    FIELD_EF_MAGNETIC_MODEL_SOLUTION,
+    FIELD_EF_GYRO_SCALE_FACTOR,
+    FIELD_EF_ACCEL_SCALE_FACTOR,
+    FIELD_EF_GYRO_SCALE_FACTOR_UNCERTAINTY,
+
+    FIELD_EF_ACCEL_SCALE_FACTOR_UNCERTAINTY,
+    FIELD_EF_STANDARD_ATMOSPHERE_MODEL,
+    FIELD_EF_PRESSURE_ALTITUDE,
+    FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION,
+    FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION_UNCERTAINTY,
   };
 
   assert(sizeof(data_fields) == sources.size());
@@ -178,7 +198,7 @@ void Hg3dmGx4::setEFDataRate(unsigned int decimation, const std::bitset<7>& sour
   }
 
   MIP p(CMD_CLASS_3DM);
-  p.beginField(CMD_IMU_MESSAGE_FORMAT);
+  p.beginField(CMD_EF_MESSAGE_FORMAT);
   p.append(FUNCTION_APPLY);
   p.append(u8(fields.size()));
 
@@ -191,7 +211,7 @@ void Hg3dmGx4::setEFDataRate(unsigned int decimation, const std::bitset<7>& sour
   p.endField();
   p.updateCheckSum();
 
-  std::cout << p.toString() << std::endl;
+  //std::cout << p.toString() << std::endl;
 
   sendAndReceivePacket(p);
 }
@@ -220,18 +240,45 @@ void Hg3dmGx4::selectDataStream(const std::bitset<3>& streams)
 
 
   p.updateCheckSum();
+  //std::cout << p.toString() << std::endl;
+
+  sendAndReceivePacket(p);
+}
+
+void Hg3dmGx4::initializeFilterWithMagneto()
+{
+  MIP p(CMD_CLASS_EF);
+  p.beginField(CMD_INITIAL_ATTITUDE_WITH_MAGNETOMETER);
+  p.append(float(0));
+  p.endField();
+
+  p.updateCheckSum();
   std::cout << p.toString() << std::endl;
 
   sendAndReceivePacket(p);
-  std::cout << std::dec;
-  std::cout << received_packet_.length << std::endl;
-  std::cout << std::hex;
-  std::cout << received_packet_.getFieldDescriptor() << std::endl;
-  p.nextField();
-  std::cout << received_packet_.getFieldDescriptor() << std::endl;
-  p.nextField();
-  std::cout << received_packet_.getFieldDescriptor() << std::endl;
 
+  std::cout << received_packet_.toString() << std::endl;
+}
+
+void Hg3dmGx4::setInitialAttitude(float roll, float pitch, float yaw)
+{
+  MIP p(CMD_CLASS_EF);
+  p.beginField(CMD_SET_INITIAL_ATTITUDE);
+  p.append(roll);
+  p.append(pitch);
+  p.append(yaw);
+  p.endField();
+
+  p.updateCheckSum();
+  std::cout << p.toString() << std::endl;
+
+  sendAndReceivePacket(p);
+
+  std::cout << received_packet_.toString() << std::endl;
+}
+
+void Hg3dmGx4::setInitialHeading(float heading)
+{
 
 }
 
@@ -379,6 +426,7 @@ void Hg3dmGx4::receiveDataStream()
 
 void Hg3dmGx4::processPacket()
 {
+  //std::cout << received_packet_.toString() << std::endl;
   switch(received_packet_.descriptor)
   {
     case DATA_CLASS_IMU: processIMUPacket(); break;
@@ -392,9 +440,9 @@ void Hg3dmGx4::processPacket()
 void Hg3dmGx4::processIMUPacket()
 {
   float data[10];
-  while(true)
+  while (true)
   {
-    switch(received_packet_.getFieldDescriptor())
+    switch (received_packet_.getFieldDescriptor())
     {
       case FILED_IMU_SCALED_ACCELEROMETER:
         received_packet_.extract(3, data);
@@ -408,10 +456,14 @@ void Hg3dmGx4::processIMUPacket()
         received_packet_.extract(3, data);
         printf("mag: %8.3f %8.3f %8.3f\n", data[0], data[1], data[2]);
         break;
-      case FILED_IMU_SCALED_PRESSURE: break;
-      case FILED_IMU_DELTA_THETA: break;
-      case FILED_IMU_DELTA_VELOCITY: break;
-      case FILED_IMU_GPS_CORRELATION_TIMESTAMP: break;
+      case FILED_IMU_SCALED_PRESSURE:
+        break;
+      case FILED_IMU_DELTA_THETA:
+        break;
+      case FILED_IMU_DELTA_VELOCITY:
+        break;
+      case FILED_IMU_GPS_CORRELATION_TIMESTAMP:
+        break;
       default:
         return;
     }
@@ -426,7 +478,63 @@ void Hg3dmGx4::processGPSPacket()
 
 void Hg3dmGx4::processEFPacket()
 {
-  std::cout << __FUNCTION__ << std::endl;
+  float data[10];
+  while (true)
+  {
+    switch (received_packet_.getFieldDescriptor())
+    {
+      case FIELD_EF_FILTER_STATUS:
+      {
+        uint16_t status[3];
+        received_packet_.extract(3, status);
+        printf("sta: 0x%04x 0x%04x 0x%04x\n", status[0], status[1], status[2]);
+        break;
+      }
+      case FIELD_EF_GPS_TIMESTAMP: break;
+      case FIELD_EF_LLH_POSITION: break;
+      case FIELD_EF_NED_VELOCITY: break;
+      case FIELD_EF_ORIENTATION_QUATERNION: break;
+
+      case FIELD_EF_ORIENTATION_MATRIX: break;
+      case FIELD_EF_ORIENTATION_EULER:
+        received_packet_.extract(3, data);
+        printf("rpy: %8.3f %8.3f %8.3f\n", data[0], data[1], data[2]);
+        break;
+      case FIELD_EF_GYRO_BIAS: break;
+      case FIELD_EF_ACCEL_BIAS: break;
+      case FIELD_EF_LLH_POSITION_UNCERTAINTY: break;
+
+      case FIELD_EF_NED_VELOCITY_UNCERTAINTY: break;
+      case FIELD_EF_ALTITUDE_UNCERTAINTY: break;
+      case FIELD_EF_GYRO_BIAS_UNCERTAINTY: break;
+      case FIELD_EF_ACCEL_BIAS_UNCERTAINTY: break;
+      case FIELD_EF_LINEAER_ACCELERATION: break;
+
+      case FIELD_EF_COMPENSATED_ACCELERATION: break;
+      case FIELD_EF_COMPENSATED_ANGULAR_RATE: break;
+      case FIELD_EF_WGS84_LOCAL_GRAVITY_MAGNITUDE: break;
+      case FIELD_EF_ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT: break;
+      case FIELD_EF_GRAVITY_VECTOR:
+        received_packet_.extract(3, data);
+        printf("grv: %8.3f %8.3f %8.3f\n", data[0], data[1], data[2]);
+        break;
+
+      case FIELD_EF_HEADING_UPDATE_SOURCE_STATE: break;
+      case FIELD_EF_MAGNETIC_MODEL_SOLUTION: break;
+      case FIELD_EF_GYRO_SCALE_FACTOR: break;
+      case FIELD_EF_ACCEL_SCALE_FACTOR: break;
+      case FIELD_EF_GYRO_SCALE_FACTOR_UNCERTAINTY: break;
+
+      case FIELD_EF_ACCEL_SCALE_FACTOR_UNCERTAINTY: break;
+      case FIELD_EF_STANDARD_ATMOSPHERE_MODEL: break;
+      case FIELD_EF_PRESSURE_ALTITUDE: break;
+      case FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION: break;
+      case FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION_UNCERTAINTY: break;
+      default:
+        return;
+    }
+    received_packet_.nextField();
+  }
 }
 
 void Hg3dmGx4::processRespondPacket()

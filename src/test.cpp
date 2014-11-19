@@ -22,18 +22,31 @@ int main()
 
       imu.idle();
 
-      imu.setIMUDataRate(1, //(500 / 1) for 3DM-GX4-45
+      static const int decimation = (500/100);
+
+      imu.setIMUDataRate(decimation, //(500 / 1) for 3DM-GX4-45
                          hg_3dm_gx4::IMUData::SCALED_ACCELEROMETER |
                          hg_3dm_gx4::IMUData::SCALED_GYRO |
-                         hg_3dm_gx4::IMUData::SCALED_MAGNETO);
-
-      cout << imu.receivedPacket().toString() << endl;
-
+                         hg_3dm_gx4::IMUData::SCALED_MAGNETO |
+                         0);
 
 
-      imu.selectDataStream(hg_3dm_gx4::DataStream::IMU_DATA);
+      imu.setEFDataRate(decimation,
+                        hg_3dm_gx4::EFData::ORIENTATION_EULER |
+                        hg_3dm_gx4::EFData::GRAVITY_VECTOR |
+                        //hg_3dm_gx4::EFData::FILTER_STATUS |
+                        0);
 
-      imu.resume();
+      imu.selectDataStream(
+                           //hg_3dm_gx4::DataStream::IMU_DATA |
+                           hg_3dm_gx4::DataStream::EF_DATA |
+                           0);
+
+      //imu.resume();
+
+      //imu.initializeFilterWithMagneto();
+
+      imu.setInitialAttitude(0, 0, 0);
 
       imu.receiveDataStream();
 

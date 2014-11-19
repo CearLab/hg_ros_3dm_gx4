@@ -43,8 +43,22 @@ namespace hg_3dm_gx4
 
   //3DM commands
   static const uint8_t CMD_IMU_MESSAGE_FORMAT = 0x08;
+  static const uint8_t CMD_GPS_MESSAGE_FORMAT = 0x09;
+  static const uint8_t CMD_EF_MESSAGE_FORMAT = 0x0A;
   static const uint8_t CMD_UART_BAUD_RATE = 0x40;
   static const uint8_t CMD_ENABLE_DATA_STREAM = 0x11;
+
+  //EF commands
+
+
+  static const uint8_t CMD_SET_INITIAL_ATTITUDE = 0x02;
+
+  /*
+   * This command is not available in 45 data sheet.
+   * But it is mentioned in 45 example and available in
+   * 25 data sheet.
+   */
+  static const uint8_t CMD_INITIAL_ATTITUDE_WITH_MAGNETOMETER = 0x04;
 
   //IMU Data field
   static const uint8_t FILED_IMU_SCALED_ACCELEROMETER = 0x04;
@@ -81,7 +95,7 @@ namespace hg_3dm_gx4
   static const uint8_t FIELD_EF_ORIENTATION_QUATERNION = 0x03;
 
   static const uint8_t FIELD_EF_ORIENTATION_MATRIX = 0x04;
-  static const uint8_t FIELD_EF_EF_ORIENTATION_EULER = 0x05;
+  static const uint8_t FIELD_EF_ORIENTATION_EULER = 0x05;
   static const uint8_t FIELD_EF_GYRO_BIAS = 0x06;
   static const uint8_t FIELD_EF_ACCEL_BIAS = 0x07;
   static const uint8_t FIELD_EF_LLH_POSITION_UNCERTAINTY = 0x08;
@@ -111,223 +125,295 @@ namespace hg_3dm_gx4
   static const uint8_t FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION_UNCERTAINTY = 0x31;
 
 
-
-
-struct MIP
-{
-  static const uint8_t HEADER_LENGTH = 4;
-  static const uint8_t SYNC1 = 0x75;
-  static const uint8_t SYNC2 = 0x65;
-  static const uint8_t MAX_PAYLOAD = 255;
-
-
-  union
+  struct IMUData
   {
-    struct
+    enum
     {
-      uint8_t sync1;
-      uint8_t sync2;
+      SCALED_ACCELEROMETER = (1 << 0),
+      SCALED_GYRO = (1 << 1),
+      SCALED_MAGNETO = (1 << 2),
+      SCALED_PRESSURE = (1 << 3),
+      DELTA_THETA = (1 << 4),
+
+      DELTA_VELOCITY = (1 << 5),
+      GPS_CORRELATION_TIMESTAMP = (1 << 6),
+
+      NUM_IMU_DATA = 7
     };
-    uint16_t sync;
   };
 
-  uint8_t descriptor;
-  uint8_t length;
-  std::vector<uint8_t> payload;
-
-  union
+  struct EFData
   {
-    struct
+    enum
     {
-      uint8_t crc1;
-      uint8_t crc2;
+      FILTER_STATUS = (1 << 0),
+      GPS_TIMESTAMP = (1 << 1),
+      LLH_POSITION = (1 << 2),
+      NED_VELOCITY = (1 << 3),
+      ORIENTATION_QUATERNION = (1 << 4),
+
+      ORIENTATION_MATRIX = (1 << 5),
+      ORIENTATION_EULER = (1 << 6),
+      GYRO_BIAS = (1 << 7),
+      ACCEL_BIAS = (1 << 8),
+      LLH_POSITION_UNCERTAINTY = (1 << 9),
+
+      NED_VELOCITY_UNCERTAINTY = (1 << 10),
+      ALTITUDE_UNCERTAINTY = (1 << 11),
+      GYRO_BIAS_UNCERTAINTY = (1 << 12),
+      ACCEL_BIAS_UNCERTAINTY = (1 << 13),
+      LINEAER_ACCELERATION = (1 << 14),
+
+      COMPENSATED_ACCELERATION = (1 << 15),
+      COMPENSATED_ANGULAR_RATE = (1 << 16),
+      WGS84_LOCAL_GRAVITY_MAGNITUDE = (1 << 17),
+      ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT = (1 << 18),
+      GRAVITY_VECTOR = (1 << 19),
+
+      HEADING_UPDATE_SOURCE_STATE = (1 << 20),
+      MAGNETIC_MODEL_SOLUTION = (1 << 21),
+      GYRO_SCALE_FACTOR = (1 << 22),
+      ACCEL_SCALE_FACTOR = (1 << 23),
+      GYRO_SCALE_FACTOR_UNCERTAINTY = (1 << 24),
+
+      ACCEL_SCALE_FACTOR_UNCERTAINTY = (1 << 25),
+      STANDARD_ATMOSPHERE_MODEL = (1 << 26),
+      PRESSURE_ALTITUDE = (1 << 27),
+      GPS_ANTENNA_OFFSET_CORRECTION = (1 << 28),
+      GPS_ANTENNA_OFFSET_CORRECTION_UNCERTAINTY = (1 << 29),
+
+      NUM_EF_DATA = 30
     };
-    uint16_t crc;
   };
 
-  MIP(uint8_t desc = 0)
-    : sync1(SYNC1), sync2(SYNC2), descriptor(desc), length(0), crc(0), payload(MAX_PAYLOAD, 0), field_length_position_(0), is_encoding_(false)
+  struct DataStream
   {
-
-  }
-
-  void reset()
-  {
-    field_length_position_ = 0;
-    is_encoding_ = false;
-  }
-
-  void beginField(uint8_t description)
-  {
-    assert(!is_encoding_);
-    field_length_position_ = length;
-    payload[field_length_position_ + 1] = description;
-    length += 2;
-    is_encoding_ = true;
-  }
-
-  template<typename T>
-  void append(const T& t)
-  {
-    assert(is_encoding_);
-
-    if(sizeof(t) == 1)
+    enum
     {
-      payload[length] = t;
-      length++;
-      return;
+      IMU_DATA = (1 << 0),
+      GPS_DATA = (1 << 1),
+      EF_DATA = (1 << 2)
+    };
+  };
+
+  struct MIP
+  {
+    static const uint8_t HEADER_LENGTH = 4;
+    static const uint8_t SYNC1 = 0x75;
+    static const uint8_t SYNC2 = 0x65;
+    static const uint8_t MAX_PAYLOAD = 255;
+
+    union
+    {
+      struct
+      {
+        uint8_t sync1;
+        uint8_t sync2;
+      };
+      uint16_t sync;
+    };
+
+    uint8_t descriptor;
+    uint8_t length;
+    std::vector<uint8_t> payload;
+
+    union
+    {
+      struct
+      {
+        uint8_t crc1;
+        uint8_t crc2;
+      };
+      uint16_t crc;
+    };
+
+    MIP(uint8_t desc = 0) :
+        sync1(SYNC1), sync2(SYNC2), descriptor(desc), length(0), crc(0), payload(MAX_PAYLOAD, 0), field_length_position_(
+            0), is_encoding_(false)
+    {
+
     }
 
-    uint8_t* p = (uint8_t*)(&t);
-#ifdef HOST_LITTLE_ENDIAN
-    p += (sizeof(t) - 1);
-#endif
-    for(int i = 0; i < sizeof(t); i++)
+    void reset()
     {
-#ifdef HOST_LITTLE_ENDIAN
-      payload[length + i] = *(p-i);
-#else
-      payload[length + i] = *(p+i);
-#endif
+      field_length_position_ = 0;
+      is_encoding_ = false;
     }
-    length += sizeof(t);
-  }
 
-  void endField()
-  {
-    assert(is_encoding_);
-    payload[field_length_position_] = length - field_length_position_;
-    is_encoding_ = false;
-  }
-
-  int getFieldDescriptor() const
-  {
-    if (field_length_position_ > (payload.size() - 2))
+    void beginField(uint8_t description)
     {
-      return -1;
+      assert(!is_encoding_);
+      field_length_position_ = length;
+      payload[field_length_position_ + 1] = description;
+      length += 2;
+      is_encoding_ = true;
     }
-    if (payload[field_length_position_] == 0)
+
+    template<typename T>
+      void append(const T& t)
+      {
+        assert(is_encoding_);
+
+        if (sizeof(t) == 1)
+        {
+          payload[length] = t;
+          length++;
+          return;
+        }
+
+        uint8_t* p = (uint8_t*)(&t);
+  #ifdef HOST_LITTLE_ENDIAN
+        p += (sizeof(t) - 1);
+  #endif
+        for (int i = 0; i < sizeof(t); i++)
+        {
+  #ifdef HOST_LITTLE_ENDIAN
+          payload[length + i] = *(p-i);
+  #else
+          payload[length + i] = *(p + i);
+  #endif
+        }
+        length += sizeof(t);
+      }
+
+    void endField()
     {
-      return -1;  //  no field
+      assert(is_encoding_);
+      payload[field_length_position_] = length - field_length_position_;
+      is_encoding_ = false;
     }
-    return payload[field_length_position_ + 1]; //  descriptor after length
-  }
 
-  bool isFieldAckOrNack() const
-  {
-    const int desc = getFieldDescriptor();
-    if (desc == static_cast<int>(FIELD_ACK_NACK))
+    int getFieldDescriptor() const
     {
-      return true;
+      if (field_length_position_ > (payload.size() - 2))
+      {
+        return -1;
+      }
+      if (payload[field_length_position_] == 0)
+      {
+        return -1;  //  no field
+      }
+      return payload[field_length_position_ + 1]; //  descriptor after length
     }
-    return false;
-  }
 
-  int currentfieldLength() const
-  {
-    assert(field_length_position_ < payload.size());
-    return payload[field_length_position_];
-  }
-
-  bool gotoField(uint8_t field)
-  {
-    for (int d; (d = getFieldDescriptor()) > 0; nextField())
+    bool isFieldAckOrNack() const
     {
-      if (d == static_cast<int>(field))
+      const int desc = getFieldDescriptor();
+      if (desc == static_cast<int>(FIELD_ACK_NACK))
       {
         return true;
       }
+      return false;
     }
-    return false;
-  }
 
-  void nextField()
-  {
-    field_length_position_ += payload[field_length_position_];
-  }
-
-  template <typename T>
-  void extract(size_t count, T* output)
-  {
-    const size_t sz = sizeof(T)*count;
-    assert(field_length_position_+2+sz <= payload.size());
-
-    for(int i = 0; i < count; i++)
+    int currentfieldLength() const
     {
-      if(sizeof(T) == 1)
+      assert(field_length_position_ < payload.size());
+      return payload[field_length_position_];
+    }
+
+    bool gotoField(uint8_t field)
+    {
+      for (int d; (d = getFieldDescriptor()) > 0; nextField())
       {
-        output[i] = payload[i];
+        if (d == static_cast<int>(field))
+        {
+          return true;
+        }
       }
-      else
+      return false;
+    }
+
+    void nextField()
+    {
+      field_length_position_ += payload[field_length_position_];
+    }
+
+    template<typename T>
+      void extract(size_t count, T* output)
       {
-          uint8_t* p = (uint8_t*)(&output[i]);
-#ifdef HOST_LITTLE_ENDIAN
-          p += (sizeof(T) - 1);
-#endif
-          for (int j = 0; j < sizeof(T); j++)
+        const size_t sz = sizeof(T) * count;
+        assert(field_length_position_ + 2 + sz <= payload.size());
+
+        for (int i = 0; i < count; i++)
+        {
+          if (sizeof(T) == 1)
           {
-#ifdef HOST_LITTLE_ENDIAN
-            *(p - j) = payload[(field_length_position_+2) + (i*sizeof(T)) + j];
-#else
-            *(p + j) = payload[(field_length_position_+2) + (i*sizeof(T)) + j];
-#endif
+            output[i] = payload[i];
           }
+          else
+          {
+            uint8_t* p = (uint8_t*)(&output[i]);
+  #ifdef HOST_LITTLE_ENDIAN
+            p += (sizeof(T) - 1);
+  #endif
+            for (int j = 0; j < sizeof(T); j++)
+            {
+  #ifdef HOST_LITTLE_ENDIAN
+              *(p - j) = payload[(field_length_position_+2) + (i*sizeof(T)) + j];
+  #else
+              *(p + j) = payload[(field_length_position_ + 2) + (i * sizeof(T)) + j];
+  #endif
+            }
+          }
+        }
       }
-    }
-  }
 
-  void updateCheckSum()
-  {
-    uint8_t byte1 = 0, byte2 = 0;
-
-#define add_byte(x) \
-    byte1 += (x); \
-    byte2 += byte1; \
-
-    add_byte(sync1);
-    add_byte(sync2);
-    add_byte(descriptor);
-    add_byte(length);
-
-    for(int i = 0; i < length; i++)
+    void updateCheckSum()
     {
-      add_byte(payload[i]);
+      uint8_t byte1 = 0, byte2 = 0;
+
+  #define add_byte(x) \
+      byte1 += (x); \
+      byte2 += byte1; \
+
+      add_byte(sync1);
+      add_byte(sync2);
+      add_byte(descriptor);
+      add_byte(length);
+
+      for (int i = 0; i < length; i++)
+      {
+        add_byte(payload[i]);
+      }
+  #undef add_byte
+
+      crc = (static_cast<uint16_t>(byte1 << 8) + static_cast<uint16_t>(byte2));
+
+  #ifdef HOST_LITTLE_ENDIAN
+      uint8_t temp = crc1;
+      crc1 = crc2;
+      crc2 = temp;
+  #endif
     }
-#undef add_byte
 
-    crc = (static_cast<uint16_t>(byte1 << 8) + static_cast<uint16_t>(byte2));
-
-#ifdef HOST_LITTLE_ENDIAN
-    uint8_t temp = crc1;
-    crc1 = crc2;
-    crc2 = temp;
-#endif
-  }
-
-std::string toString() const {
-    std::stringstream ss;
-    ss << std::hex;
-    ss << "\n======= Packet =======\n";
-    ss << "Sync MSB: " << static_cast<int>(sync1) << "\n";
-    ss << "Sync LSB: " << static_cast<int>(sync2) << "\n";
-    ss << "Descriptor: " << static_cast<int>(descriptor) << "\n";
-    ss << "Length: " << static_cast<int>(length) << "\n";
-    ss << "Payload: ";
-    for (size_t s=0; s < length; s++) {
-      ss << static_cast<int>(payload[s]) << " ";
+    std::string toString() const
+    {
+      std::stringstream ss;
+      ss << std::hex;
+      ss << "\n======= Packet =======\n";
+      ss << "Sync MSB: " << static_cast<int>(sync1) << "\n";
+      ss << "Sync LSB: " << static_cast<int>(sync2) << "\n";
+      ss << "Descriptor: " << static_cast<int>(descriptor) << "\n";
+      ss << "Length: " << static_cast<int>(length) << "\n";
+      ss << "Payload: ";
+      for (size_t s = 0; s < length; s++)
+      {
+        ss << static_cast<int>(payload[s]) << " ";
+      }
+      ss << "\nCRC MSB: " << static_cast<int>(crc1) << "\n";
+      ss << "CRC LSB: " << static_cast<int>(crc2) << "\n";
+      ss << "======================";
+      return ss.str();
     }
-    ss << "\nCRC MSB: " << static_cast<int>(crc1) << "\n";
-    ss << "CRC LSB: " << static_cast<int>(crc2) << "\n";
-    ss << "======================";
-    return ss.str();
+
+  private:
+    uint8_t field_length_position_;
+    bool is_encoding_;
+  };
+
   }
-
-private:
-  uint8_t field_length_position_;
-  bool is_encoding_;
-};
-
-};
+  ;
 
 
 
