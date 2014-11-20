@@ -1,5 +1,5 @@
 /*
- * test.cpp
+ * 3dm_gx4_test.cpp
  *
  *  Created on: Nov 17, 2014
  *      Author: mahisorn
@@ -13,8 +13,8 @@ int main()
 {
   hg_3dm_gx4::Hg3dmGx4 imu;
   //if(imu.openPort("/dev/pts/16", 115200))
-  //if(imu.openPort("/dev/ttyUSB0", 115200))
-  if(imu.openPort("/dev/ttyS0", 115200))
+  if(imu.openPort("/dev/ttyUSB0", 115200))
+  //if(imu.openPort("/dev/ttyS0", 115200))
   {
     try
     {

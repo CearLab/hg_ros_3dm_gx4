@@ -17,25 +17,6 @@ namespace hg_3dm_gx4
 
 static const unsigned int COMMAND_RW_TIMEOUT = 2000;
 
-class CommandError : public std::runtime_error
-{
-public:
-  CommandError(const MIP &p, uint8_t code)
-    : std::runtime_error(generateString(p, code))
-  {
-
-  }
-
-private:
-  std::string generateString(const MIP &p, uint8_t code)
-  {
-    std::stringstream ss;
-    ss << "Received NACK with error code " << std::hex << static_cast<int>(code);
-    ss << ". Command Packet:\n" << p.toString();
-    return ss.str();
-  }
-};
-
 class Hg3dmGx4 : public hg_ros_serial::Serial
 {
 public:

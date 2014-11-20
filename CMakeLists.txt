@@ -14,8 +14,8 @@ include_directories(
     ${hg_ros_serial_INCLUDE_DIRS}
 )
 
-add_executable(3dm_test src/test.cpp src/3dm_gx4.cpp)
-target_link_libraries(3dm_test  
+add_executable(3dm_gx4_test src/3dm_gx4_test.cpp src/3dm_gx4.cpp)
+target_link_libraries(3dm_gx4_test  
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )

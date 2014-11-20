@@ -337,24 +337,9 @@ void Hg3dmGx4::setInitialHeading(float heading)
 
 void Hg3dmGx4::sendPacket(const MIP& p, int timeout)
 {
-  using namespace boost::chrono;
-
-  Serial::Data buffer;
-  buffer.reserve(MIP::HEADER_LENGTH + MIP::MAX_PAYLOAD + 2);
-
-  buffer.push_back(p.sync1);
-  buffer.push_back(p.sync2);
-  buffer.push_back(p.descriptor);
-  buffer.push_back(p.length);
-  for (size_t i = 0; i < p.length; i++) {
-    buffer.push_back(p.payload[i]);
-  }
-  buffer.push_back(p.crc1);
-  buffer.push_back(p.crc2);
-
   try
   {
-    writeData(buffer, timeout);
+    writePacket(p, timeout);
   }
   catch (std::exception &e)
   {
@@ -370,7 +355,7 @@ void Hg3dmGx4::sendAndReceivePacket(const MIP& p)
 
   sendPacket(p, COMMAND_RW_TIMEOUT);
 
-  static Serial::Data buffer(MIP::HEADER_LENGTH + MIP::MAX_PAYLOAD + 2);
+  static hg_ros_serial::DataStream buffer(MIP::MAX_PAYLOAD);
 
   high_resolution_clock::time_point tstart = high_resolution_clock::now();
   high_resolution_clock::time_point tstop = tstart + milliseconds(300);
@@ -379,7 +364,7 @@ void Hg3dmGx4::sendAndReceivePacket(const MIP& p)
   {
     if (tstop < high_resolution_clock::now())
     {
-      throw std::runtime_error("Got no respond");
+      throw hg_ros_serial::TimeoutError(false, 300);
     }
 
     try
@@ -406,7 +391,7 @@ void Hg3dmGx4::sendAndReceivePacket(const MIP& p)
 
       received_packet_.updateCheckSum();
 
-      if(received_packet_.crc1 != buffer[0] || received_packet_.crc2 != buffer[1])
+      if(!received_packet_.compareCheckSum(buffer[0], buffer[1]))
       {
         std::cout << "Warning: Dropped packet with mismatched checksum\n" << std::endl;
       }
@@ -427,7 +412,7 @@ void Hg3dmGx4::receiveDataStream()
 {
   //using namespace boost::chrono;
 
-  static Serial::Data buffer(MIP::HEADER_LENGTH + MIP::MAX_PAYLOAD + 2);
+  static hg_ros_serial::DataStream buffer(MIP::HEADER_LENGTH + MIP::MAX_PAYLOAD + 2);
 
   is_running_  = true;
 
@@ -457,7 +442,7 @@ void Hg3dmGx4::receiveDataStream()
 
       received_packet_.updateCheckSum();
 
-      if (received_packet_.crc1 != buffer[0] || received_packet_.crc2 != buffer[1])
+      if(!received_packet_.compareCheckSum(buffer[0], buffer[1]))
       {
         std::cout << "Warning: Dropped packet with mismatched checksum\n" << std::endl;
       }
