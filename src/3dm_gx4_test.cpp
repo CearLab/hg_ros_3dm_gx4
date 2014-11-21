@@ -13,14 +13,16 @@ int main()
 {
   hg_3dm_gx4::Hg3dmGx4 imu;
   //if(imu.openPort("/dev/pts/16", 115200))
-  if(imu.openPort("/dev/ttyUSB0", 115200))
-  //if(imu.openPort("/dev/ttyS0", 115200))
+  //if(imu.openPort("/dev/ttyUSB0", 115200))
+  if(imu.openPort("/dev/ttyACM0", 115200))
   {
     try
     {
       imu.ping();
 
       imu.idle();
+
+      //imu.selectBaudRate(460800);
 
       static const int decimation = (500/500);
 

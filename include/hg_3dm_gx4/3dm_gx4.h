@@ -8,6 +8,7 @@
 #ifndef SOURCE_DIRECTORY__HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_
 #define SOURCE_DIRECTORY__HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_
 
+#include <boost/function.hpp>
 #include <hg_ros_serial/serial.h>
 #include <hg_3dm_gx4/mip.h>
 #include <bitset>
@@ -57,6 +58,22 @@ public:
 
   void receiveDataStream();
 
+  void setIMUDataCallback(const boost::function<void(const IMUData &)> & cb)
+  {
+    imu_data_callback_ = cb;
+  }
+
+  void setGPSDataCallback(const boost::function<void(const GPSData &)> & cb)
+  {
+    gps_data_callback_ = cb;
+  }
+
+  void setEFDataCallback(const boost::function<void(const EFData &)> & cb)
+  {
+    ef_data_callback_ = cb;
+  }
+
+
 protected:
   void sendPacket(const MIP& p, int timeout);
   void sendAndReceivePacket(const MIP& p);
@@ -74,6 +91,10 @@ protected:
 
   MIP received_packet_;
   bool is_running_;
+
+  boost::function<void(const IMUData &)> imu_data_callback_;
+  boost::function<void(const GPSData &)> gps_data_callback_;
+  boost::function<void(const EFData &)> ef_data_callback_;
 
 };
 

@@ -143,6 +143,19 @@ struct IMUData
 
     NUM_IMU_DATA = 7
   };
+
+  uint32_t fields;
+  float scaled_accelerometer[3];
+  float scaled_gyro[3];
+  float scaled_magneto[3];
+
+  IMUData()
+    : fields(0)
+  {
+
+  }
+
+
 };
 
 struct GPSData
@@ -211,6 +224,12 @@ struct EFData
 
     NUM_EF_DATA = 30
   };
+
+  uint32_t fields;
+  float compensated_acceleration[3];
+  float compensated_angular_rate[3];
+
+
 };
 
 struct DataStream
