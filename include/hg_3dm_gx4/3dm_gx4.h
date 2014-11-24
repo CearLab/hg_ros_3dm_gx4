@@ -22,7 +22,6 @@ class Hg3dmGx4 : public hg_ros_serial::Serial
 {
 public:
   Hg3dmGx4()
-    : is_running_(false)
   {
 
   }
@@ -90,7 +89,7 @@ protected:
 
 
   MIP received_packet_;
-  bool is_running_;
+
 
   boost::function<void(const IMUData &)> imu_data_callback_;
   boost::function<void(const GPSData &)> gps_data_callback_;

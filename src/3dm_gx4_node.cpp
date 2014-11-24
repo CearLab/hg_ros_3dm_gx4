@@ -34,15 +34,19 @@ void publishIMUData(const hg_3dm_gx4::IMUData& data)
 
 void publishEFData(const hg_3dm_gx4::EFData& data)
 {
-  cout << __FUNCTION__ << endl;
+  //cout << __FUNCTION__ << endl;
   sensor_msgs::Imu imu;
 
   imu.header.stamp = ros::Time::now();
   imu.header.frame_id = "imu";
 
-  imu.linear_acceleration.x = data.compensated_acceleration[0];
-  imu.linear_acceleration.y = data.compensated_acceleration[1];
-  imu.linear_acceleration.z = data.compensated_acceleration[2];
+  imu.orientation.w = data.orientation_quaternion[0];
+  imu.orientation.x = data.orientation_quaternion[1];
+  imu.orientation.y = data.orientation_quaternion[2];
+  imu.orientation.z = data.orientation_quaternion[3];
+  imu.linear_acceleration.x = data.gravity_vector[0];
+  imu.linear_acceleration.y = data.gravity_vector[1];
+  imu.linear_acceleration.z = data.gravity_vector[2];
   imu.angular_velocity.x = data.compensated_angular_rate[0];
   imu.angular_velocity.y = data.compensated_angular_rate[1];
   imu.angular_velocity.z = data.compensated_angular_rate[2];
@@ -82,6 +86,7 @@ int main(int argc, char **argv)
 
 
   imu.setEFDataRate(decimation,
+                    hg_3dm_gx4::EFData::ORIENTATION_QUATERNION |
                     //hg_3dm_gx4::EFData::ORIENTATION_EULER |
                     hg_3dm_gx4::EFData::GRAVITY_VECTOR |
                     //hg_3dm_gx4::EFData::FILTER_STATUS |
@@ -105,14 +110,14 @@ int main(int argc, char **argv)
 
   imu.setInitialAttitude(0, 0, 0);
 
-  //imu.setIMUDataCallback(publishIMUData);
-  imu.setEFDataCallback(publishEFData);
+
+
 
 
   g_pub_imu = nh.advertise<sensor_msgs::Imu>("imu", 1);
 
-
-
+  //imu.setIMUDataCallback(publishIMUData);
+  imu.setEFDataCallback(publishEFData);
 
   while(ros::ok())
   {

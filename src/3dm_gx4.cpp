@@ -86,7 +86,7 @@ void Hg3dmGx4::selectBaudRate(unsigned int baud)
   p.payload[6] = baud & 0xff ;
   p.updateCheckSum();
 
-  std::cout << p.toString() << std::endl;
+  //std::cout << p.toString() << std::endl;
 
   try
   {
@@ -323,11 +323,11 @@ void Hg3dmGx4::setInitialAttitude(float roll, float pitch, float yaw)
   p.endField();
 
   p.updateCheckSum();
-  std::cout << p.toString() << std::endl;
+  //std::cout << p.toString() << std::endl;
 
   sendAndReceivePacket(p);
 
-  std::cout << received_packet_.toString() << std::endl;
+  //std::cout << received_packet_.toString() << std::endl;
 }
 
 void Hg3dmGx4::setInitialHeading(float heading)
@@ -410,54 +410,46 @@ void Hg3dmGx4::sendAndReceivePacket(const MIP& p)
 
 void Hg3dmGx4::receiveDataStream()
 {
-  //using namespace boost::chrono;
+  static hg_ros_serial::DataStream buffer(MIP::MAX_PAYLOAD);
 
-  static hg_ros_serial::DataStream buffer(MIP::HEADER_LENGTH + MIP::MAX_PAYLOAD + 2);
-
-  is_running_  = true;
-
-  //while (is_running_)
+  try
   {
-    try
+    //Get header
+    asyncReadBlockOfData(buffer, 1, COMMAND_RW_TIMEOUT);
+    if (buffer[0] != MIP::SYNC1)
+      return;//continue;
+
+    asyncReadBlockOfData(buffer, 1, COMMAND_RW_TIMEOUT);
+    if (buffer[0] != MIP::SYNC2)
+      return;//continue;
+
+    //Get descriptor and length
+    asyncReadBlockOfData(buffer, 2, COMMAND_RW_TIMEOUT);
+    received_packet_.descriptor = buffer[0];
+    received_packet_.length = buffer[1];
+
+    //Get payload
+    asyncReadBlockOfData(received_packet_.payload, received_packet_.length, COMMAND_RW_TIMEOUT);
+
+    //Get checksum
+    asyncReadBlockOfData(buffer, 2, COMMAND_RW_TIMEOUT);
+
+    received_packet_.updateCheckSum();
+
+    if(!received_packet_.compareCheckSum(buffer[0], buffer[1]))
     {
-      //Get header
-      asyncReadBlockOfData(buffer, 1, COMMAND_RW_TIMEOUT);
-      if (buffer[0] != MIP::SYNC1)
-        return;//continue;
-
-      asyncReadBlockOfData(buffer, 1, COMMAND_RW_TIMEOUT);
-      if (buffer[0] != MIP::SYNC2)
-        return;//continue;
-
-      //Get descriptor and length
-      asyncReadBlockOfData(buffer, 2, COMMAND_RW_TIMEOUT);
-      received_packet_.descriptor = buffer[0];
-      received_packet_.length = buffer[1];
-
-      //Get payload
-      asyncReadBlockOfData(received_packet_.payload, received_packet_.length, COMMAND_RW_TIMEOUT);
-
-      //Get checksum
-      asyncReadBlockOfData(buffer, 2, COMMAND_RW_TIMEOUT);
-
-      received_packet_.updateCheckSum();
-
-      if(!received_packet_.compareCheckSum(buffer[0], buffer[1]))
-      {
-        std::cout << "Warning: Dropped packet with mismatched checksum\n" << std::endl;
-      }
-      else
-      {
-        processPacket();
-      }
+      std::cout << "Warning: Dropped packet with mismatched checksum\n" << std::endl;
     }
-    catch (std::exception& e)
+    else
     {
-      std::cout << e.what() << std::endl;
-      is_running_ = false;
+      processPacket();
     }
-    //usleep(1000);
   }
+  catch (std::exception& e)
+  {
+    std::cout << e.what() << std::endl;
+  }
+
 }
 
 void Hg3dmGx4::processPacket()
@@ -569,7 +561,11 @@ void Hg3dmGx4::processEFPacket()
       case FIELD_EF_GPS_TIMESTAMP: break;
       case FIELD_EF_LLH_POSITION: break;
       case FIELD_EF_NED_VELOCITY: break;
-      case FIELD_EF_ORIENTATION_QUATERNION: break;
+      case FIELD_EF_ORIENTATION_QUATERNION:
+        received_packet_.extract(4, data.orientation_quaternion);
+        data.fields |= EFData::ORIENTATION_QUATERNION;
+        //printf("ef_qua: %8.3f %8.3f %8.3f %8.3f\n", data.orientation_quaternion[0], data.orientation_quaternion[1], data.orientation_quaternion[2], data.orientation_quaternion[3]);
+        break;
 
       case FIELD_EF_ORIENTATION_MATRIX: break;
       case FIELD_EF_ORIENTATION_EULER:
@@ -587,23 +583,21 @@ void Hg3dmGx4::processEFPacket()
       case FIELD_EF_LINEAER_ACCELERATION: break;
 
       case FIELD_EF_COMPENSATED_ACCELERATION:
-        //received_packet_.extract(3, data.compensated_acceleration);
-        //data.fields |= EFData::COMPENSATED_ACCELERATION;
+        received_packet_.extract(3, data.compensated_acceleration);
+        data.fields |= EFData::COMPENSATED_ACCELERATION;
         //printf("ef_acc: %8.3f %8.3f %8.3f\n", data.compensated_acceleration[0], data.compensated_acceleration[1], data.compensated_acceleration[2]);
         break;
-      case FIELD_EF_COMPENSATED_ANGULAR_RATE: break;
+      case FIELD_EF_COMPENSATED_ANGULAR_RATE:
         received_packet_.extract(3, data.compensated_angular_rate);
         data.fields |= EFData::COMPENSATED_ANGULAR_RATE;
-        printf("ef_gyr: %8.3f %8.3f %8.3f\n", data.compensated_angular_rate[0], data.compensated_angular_rate[1], data.compensated_angular_rate[2]);
+        //printf("ef_gyr: %8.3f %8.3f %8.3f\n", data.compensated_angular_rate[0], data.compensated_angular_rate[1], data.compensated_angular_rate[2]);
         break;
       case FIELD_EF_WGS84_LOCAL_GRAVITY_MAGNITUDE: break;
       case FIELD_EF_ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT: break;
       case FIELD_EF_GRAVITY_VECTOR:
-        //received_packet_.extract(3, data);
-        //printf("grv: %8.3f %8.3f %8.3f\n", data[0], data[1], data[2]);
-        received_packet_.extract(3, data.compensated_acceleration);
-        data.fields |= EFData::COMPENSATED_ACCELERATION;
-        printf("ef_acc: %8.3f %8.3f %8.3f\n", data.compensated_acceleration[0], data.compensated_acceleration[1], data.compensated_acceleration[2]);
+        received_packet_.extract(3, data.gravity_vector);
+        data.fields |= EFData::GRAVITY_VECTOR;
+        //printf("ef_grv: %8.3f %8.3f %8.3f\n", data.gravity_vector[0], data.gravity_vector[1], data.gravity_vector[2]);
         break;
 
       case FIELD_EF_HEADING_UPDATE_SOURCE_STATE: break;
@@ -637,7 +631,7 @@ void Hg3dmGx4::processRespondPacket()
     if(received_packet_.payload[3] == 0x00)
     {
       //Got ACK
-      std::cout << "Found ACK field" << std::endl;
+      //std::cout << "Found ACK field" << std::endl;
     }
     else
     {

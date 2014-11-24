@@ -226,8 +226,15 @@ struct EFData
   };
 
   uint32_t fields;
+
+  //TODO add all fields
+  float orientation_quaternion[4];
+
   float compensated_acceleration[3];
   float compensated_angular_rate[3];
+  //WGS84_LOCAL_GRAVITY_MAGNITUDE
+  //ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT
+  float gravity_vector[3];
 
 
 };
