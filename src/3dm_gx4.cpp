@@ -18,7 +18,7 @@ void Hg3dmGx4::ping()
   MIP p(CMD_CLASS_BASE);
   p.beginField(CMD_PING);
   p.endField();
-  p.updateCheckSum();
+  p.updateChecksum();
   sendAndReceivePacket(p);
 }
 
@@ -27,7 +27,7 @@ void Hg3dmGx4::idle()
   MIP p(CMD_CLASS_BASE);
   p.beginField(CMD_IDLE);
   p.endField();
-  p.updateCheckSum();
+  p.updateChecksum();
   sendAndReceivePacket(p);
 }
 
@@ -36,7 +36,7 @@ void Hg3dmGx4::resume()
   MIP p(CMD_CLASS_BASE);
   p.beginField(CMD_RESUME);
   p.endField();
-  p.updateCheckSum();
+  p.updateChecksum();
   sendAndReceivePacket(p);
 }
 
@@ -45,7 +45,7 @@ void Hg3dmGx4::reset()
   MIP p(CMD_CLASS_BASE);
   p.beginField(CMD_RESET);
   p.endField();
-  p.updateCheckSum();
+  p.updateChecksum();
   sendAndReceivePacket(p);
 }
 
@@ -84,7 +84,7 @@ void Hg3dmGx4::selectBaudRate(unsigned int baud)
   p.payload[4] = (baud >> 16) & 0xff;
   p.payload[5] = (baud >> 8) & 0xff;
   p.payload[6] = baud & 0xff ;
-  p.updateCheckSum();
+  p.updateChecksum();
 
   //std::cout << p.toString() << std::endl;
 
@@ -137,7 +137,7 @@ void Hg3dmGx4::setIMUDataRate(unsigned int decimation, const std::bitset<IMUData
   }
 
   p.endField();
-  p.updateCheckSum();
+  p.updateChecksum();
 
   //std::cout << p.toString() << std::endl;
 
@@ -189,7 +189,7 @@ void Hg3dmGx4::setGPSDataRate(unsigned int decimation, const std::bitset<GPSData
   }
 
   p.endField();
-  p.updateCheckSum();
+  p.updateChecksum();
 
   //std::cout << p.toString() << std::endl;
 
@@ -262,7 +262,7 @@ void Hg3dmGx4::setEFDataRate(unsigned int decimation, const std::bitset<EFData::
   }
 
   p.endField();
-  p.updateCheckSum();
+  p.updateChecksum();
 
   //std::cout << p.toString() << std::endl;
 
@@ -292,7 +292,7 @@ void Hg3dmGx4::selectDataStream(const std::bitset<3>& streams)
   }
 
 
-  p.updateCheckSum();
+  p.updateChecksum();
   //std::cout << p.toString() << std::endl;
 
   sendAndReceivePacket(p);
@@ -305,7 +305,7 @@ void Hg3dmGx4::initializeFilterWithMagneto()
   p.append(float(0));
   p.endField();
 
-  p.updateCheckSum();
+  p.updateChecksum();
   std::cout << p.toString() << std::endl;
 
   sendAndReceivePacket(p);
@@ -322,7 +322,7 @@ void Hg3dmGx4::setInitialAttitude(float roll, float pitch, float yaw)
   p.append(yaw);
   p.endField();
 
-  p.updateCheckSum();
+  p.updateChecksum();
   //std::cout << p.toString() << std::endl;
 
   sendAndReceivePacket(p);
@@ -389,7 +389,7 @@ void Hg3dmGx4::sendAndReceivePacket(const MIP& p)
       //Get checksum
       asyncReadBlockOfData(buffer, 2, COMMAND_RW_TIMEOUT);
 
-      received_packet_.updateCheckSum();
+      received_packet_.updateChecksum();
 
       if(!received_packet_.compareCheckSum(buffer[0], buffer[1]))
       {
@@ -434,7 +434,7 @@ void Hg3dmGx4::receiveDataStream()
     //Get checksum
     asyncReadBlockOfData(buffer, 2, COMMAND_RW_TIMEOUT);
 
-    received_packet_.updateCheckSum();
+    received_packet_.updateChecksum();
 
     if(!received_packet_.compareCheckSum(buffer[0], buffer[1]))
     {

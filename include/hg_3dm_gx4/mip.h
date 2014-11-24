@@ -422,7 +422,7 @@ public:
     return (msb == crc16_msb_) && (lsb == crc16_lsb_);
   }
 
-  void updateCheckSum()
+  void updateChecksum()
   {
     uint8_t byte1 = 0, byte2 = 0;
 

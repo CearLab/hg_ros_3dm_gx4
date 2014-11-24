@@ -61,10 +61,7 @@ int main(int argc, char **argv)
 
   hg_3dm_gx4::Hg3dmGx4 imu;
 
-
-
-
-  if(!imu.openPort("/dev/ttyACM0", 115200))
+  if(!imu.openPort("/dev/ttyACM0", 921600))
   {
     ROS_ERROR("Cannot open device");
     return -1;
@@ -79,9 +76,9 @@ int main(int argc, char **argv)
   static const int decimation = (500/500);
 
   imu.setIMUDataRate(decimation, //(500 / 1) for 3DM-GX4-45
-                     hg_3dm_gx4::IMUData::SCALED_ACCELEROMETER |
-                     hg_3dm_gx4::IMUData::SCALED_GYRO |
-                     hg_3dm_gx4::IMUData::SCALED_MAGNETO |
+                     //hg_3dm_gx4::IMUData::SCALED_ACCELEROMETER |
+                     //hg_3dm_gx4::IMUData::SCALED_GYRO |
+                     //hg_3dm_gx4::IMUData::SCALED_MAGNETO |
                      0);
 
 
