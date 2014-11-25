@@ -10,8 +10,8 @@
 
 #include <boost/function.hpp>
 #include <hg_ros_serial/serial.h>
-#include <hg_3dm_gx4/mip.h>
 #include <bitset>
+#include "../hg_ros_3dm_gx4/mip.h"
 
 namespace hg_3dm_gx4
 {

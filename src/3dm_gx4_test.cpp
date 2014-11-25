@@ -5,7 +5,7 @@
  *      Author: mahisorn
  */
 
-#include <hg_3dm_gx4/3dm_gx4.h>
+#include <hg_ros_3dm_gx4/3dm_gx4.h>
 
 using namespace std;
 

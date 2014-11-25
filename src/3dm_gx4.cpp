@@ -4,7 +4,7 @@
  *  Created on: Nov 17, 2014
  *      Author: mahisorn
  */
-#include <hg_3dm_gx4/3dm_gx4.h>
+#include <hg_ros_3dm_gx4/3dm_gx4.h>
 #include <boost/asio.hpp>
 #include <boost/chrono.hpp>
 

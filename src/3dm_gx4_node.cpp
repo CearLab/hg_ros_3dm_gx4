@@ -6,7 +6,7 @@
  */
 
 #include <ros/ros.h>
-#include <hg_3dm_gx4/3dm_gx4.h>
+#include <hg_ros_3dm_gx4/3dm_gx4.h>
 #include <sensor_msgs/Imu.h>
 
 using namespace std;

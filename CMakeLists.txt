@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 
-project(hg_3dm_gx4)
+project(hg_ros_3dm_gx4)
 
 find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs geometry_msgs)
 find_package(Boost REQUIRED COMPONENTS thread system chrono)
