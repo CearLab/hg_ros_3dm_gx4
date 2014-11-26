@@ -2,16 +2,14 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(hg_ros_3dm_gx4)
 
-find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs geometry_msgs)
-find_package(Boost REQUIRED COMPONENTS thread system chrono)
-find_package(hg_ros_serial REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roscpp hg_ros_serial sensor_msgs geometry_msgs)
+
 
 catkin_package()
 
 include_directories(
     include    
-    ${Boost_INCLUDE_DIRS}
-    ${hg_ros_serial_INCLUDE_DIRS}
+    ${catkin_INCLUDE_DIRS}
 )
 
 add_executable(3dm_gx4_test src/3dm_gx4_test.cpp src/3dm_gx4.cpp)
