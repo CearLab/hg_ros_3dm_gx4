@@ -8,9 +8,6 @@
 #include <boost/asio.hpp>
 #include <boost/chrono.hpp>
 
-#define u8(x) static_cast<uint8_t>((x))
-#define u16(x) static_cast<uint16_t>((x))
-
 using namespace hg_3dm_gx4;
 
 void Hg3dmGx4::ping()

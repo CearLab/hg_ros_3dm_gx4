@@ -103,11 +103,9 @@ int main(int argc, char **argv)
 
   imu.resume();
 
-  //imu.initializeFilterWithMagneto();
+  imu.initializeFilterWithMagneto();
 
-  imu.setInitialAttitude(0, 0, 0);
-
-
+  //imu.setInitialAttitude(0, 0, 0);
 
 
 
