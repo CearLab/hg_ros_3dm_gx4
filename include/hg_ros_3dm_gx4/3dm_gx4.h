@@ -42,6 +42,7 @@ public:
   void reset();
 
   void selectBaudRate(unsigned int baud);
+  void setCFSettings();
 
   void setIMUDataRate(unsigned int decimation, const std::bitset<IMUData::NUM_IMU_DATA>& sources);
   void setGPSDataRate(unsigned int decimation, const std::bitset<GPSData::NUM_GPS_DATA>& sources);

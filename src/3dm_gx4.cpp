@@ -97,17 +97,30 @@ void Hg3dmGx4::selectBaudRate(unsigned int baud)
   }
 }
 
+void Hg3dmGx4::setCFSettings()
+{
+  MIP p(CMD_CLASS_3DM);
+  p.beginField(CMD_CF_SETTINGS);
+  //p.app
+  //p.updateChecksum();
+}
+
 void Hg3dmGx4::setIMUDataRate(unsigned int decimation, const std::bitset<IMUData::NUM_IMU_DATA>& sources)
 {
   static const uint8_t data_fields[] =
   {
-    FILED_IMU_SCALED_ACCELEROMETER,
-    FILED_IMU_SCALED_GYRO,
-    FILED_IMU_SCALED_MAGNETO,
-    FILED_IMU_SCALED_PRESSURE,
-    FILED_IMU_DELTA_THETA,
-    FILED_IMU_DELTA_VELOCITY,
-    FILED_IMU_GPS_CORRELATION_TIMESTAMP
+    FIELD_IMU_SCALED_ACCELEROMETER,
+    FIELD_IMU_SCALED_GYRO,
+    FIELD_IMU_SCALED_MAGNETO,
+    FIELD_IMU_SCALED_PRESSURE,
+    FIELD_IMU_DELTA_THETA,
+    FIELD_IMU_DELTA_VELOCITY,
+    FIELD_IMU_CF_ORIENTATION_MATRIX,
+    FIELD_IMU_CF_QUATERNION,
+    FIELD_IMU_CF_EULAR_ANGLES,
+    FIELD_IMU_CF_STABILIZED_MAG_VECTOR,
+    FIELD_IMU_CF_STABILIZED_ACCEL_VECTOR,
+    FIELD_IMU_GPS_CORRELATION_TIMESTAMP
   };
 
   assert(sizeof(data_fields) == sources.size());
@@ -145,21 +158,21 @@ void Hg3dmGx4::setGPSDataRate(unsigned int decimation, const std::bitset<GPSData
 {
   static const uint8_t data_fields[] =
   {
-    FILED_GPS_LLH_POSITION,
-    FILED_GPS_ECEF_POSITION,
-    FILED_GPS_NED_VELOCITY,
-    FILED_GPS_ECEF_VELOCITY,
-    FILED_GPS_DOP_DATA,
+    FIELD_GPS_LLH_POSITION,
+    FIELD_GPS_ECEF_POSITION,
+    FIELD_GPS_NED_VELOCITY,
+    FIELD_GPS_ECEF_VELOCITY,
+    FIELD_GPS_DOP_DATA,
 
-    FILED_GPS_UTC_TIME,
-    FILED_GPS_TIME,
-    FILED_GPS_CLOCK_INFORMATION,
-    FILED_GPS_FIX_INFORMATION,
-    FILED_GPS_SPACE_VEHICLE_INFORMATION,
+    FIELD_GPS_UTC_TIME,
+    FIELD_GPS_TIME,
+    FIELD_GPS_CLOCK_INFORMATION,
+    FIELD_GPS_FIX_INFORMATION,
+    FIELD_GPS_SPACE_VEHICLE_INFORMATION,
 
-    FILED_GPS_HARDWARE_STATUS,
-    FILED_DGPS_INFORMATION,
-    FILED_DGPS_CHANNEL_STATUS
+    FIELD_GPS_HARDWARE_STATUS,
+    FIELD_DGPS_INFORMATION,
+    FIELD_DGPS_CHANNEL_STATUS
   };
 
   assert(sizeof(data_fields) == sources.size());
@@ -303,11 +316,11 @@ void Hg3dmGx4::initializeFilterWithMagneto()
   p.endField();
 
   p.updateChecksum();
-  std::cout << p.toString() << std::endl;
+  //std::cout << p.toString() << std::endl;
 
   sendAndReceivePacket(p);
 
-  std::cout << received_packet_.toString() << std::endl;
+  //std::cout << received_packet_.toString() << std::endl;
 }
 
 void Hg3dmGx4::setInitialAttitude(float roll, float pitch, float yaw)
@@ -469,28 +482,41 @@ void Hg3dmGx4::processIMUPacket()
   {
     switch (received_packet_.getFieldDescriptor())
     {
-      case FILED_IMU_SCALED_ACCELEROMETER:
+      case FIELD_IMU_SCALED_ACCELEROMETER:
         received_packet_.extract(3, data.scaled_accelerometer);
         data.fields |= IMUData::SCALED_ACCELEROMETER;
-        printf("acc: %8.3f %8.3f %8.3f\n", data.scaled_accelerometer[0], data.scaled_accelerometer[1], data.scaled_accelerometer[2]);
+        //printf("acc: %8.3f %8.3f %8.3f\n", data.scaled_accelerometer[0], data.scaled_accelerometer[1], data.scaled_accelerometer[2]);
         break;
-      case FILED_IMU_SCALED_GYRO:
+      case FIELD_IMU_SCALED_GYRO:
         received_packet_.extract(3, data.scaled_gyro);
         data.fields |= IMUData::SCALED_GYRO;
-        printf("gyr: %8.3f %8.3f %8.3f\n", data.scaled_gyro[0], data.scaled_gyro[1], data.scaled_gyro[2]);
+        //printf("gyr: %8.3f %8.3f %8.3f\n", data.scaled_gyro[0], data.scaled_gyro[1], data.scaled_gyro[2]);
         break;
-      case FILED_IMU_SCALED_MAGNETO:
+      case FIELD_IMU_SCALED_MAGNETO:
         data.fields |= IMUData::SCALED_MAGNETO;
         received_packet_.extract(3, data.scaled_magneto);
-        printf("mag: %8.3f %8.3f %8.3f\n", data.scaled_magneto[0], data.scaled_magneto[1], data.scaled_magneto[2]);
+        //printf("mag: %8.3f %8.3f %8.3f\n", data.scaled_magneto[0], data.scaled_magneto[1], data.scaled_magneto[2]);
         break;
-      case FILED_IMU_SCALED_PRESSURE:
+      case FIELD_IMU_SCALED_PRESSURE:
         break;
-      case FILED_IMU_DELTA_THETA:
+      case FIELD_IMU_DELTA_THETA:
         break;
-      case FILED_IMU_DELTA_VELOCITY:
+      case FIELD_IMU_DELTA_VELOCITY:
         break;
-      case FILED_IMU_GPS_CORRELATION_TIMESTAMP:
+      case FIELD_IMU_CF_ORIENTATION_MATRIX:
+        break;
+      case FIELD_IMU_CF_QUATERNION:
+        data.fields |= IMUData::CF_QUATERNION;
+        received_packet_.extract(4, data.orientation_quaternion);
+        //printf("cf_qua: %8.3f %8.3f %8.3f %8.3f\n", data.orientation_quaternion[0], data.orientation_quaternion[1], data.orientation_quaternion[2], data.orientation_quaternion[3]);
+        break;
+      case FIELD_IMU_CF_EULAR_ANGLES:
+        break;
+      case FIELD_IMU_CF_STABILIZED_MAG_VECTOR:
+        break;
+      case FIELD_IMU_CF_STABILIZED_ACCEL_VECTOR:
+        break;
+      case FIELD_IMU_GPS_CORRELATION_TIMESTAMP:
         break;
       default:
         //no more data
@@ -511,29 +537,29 @@ void Hg3dmGx4::processGPSPacket()
   {
     switch (received_packet_.getFieldDescriptor())
     {
-      case FILED_GPS_LLH_POSITION: break;
-      case FILED_GPS_ECEF_POSITION: break;
-      case FILED_GPS_NED_VELOCITY: break;
-      case FILED_GPS_ECEF_VELOCITY: break;
-      case FILED_GPS_DOP_DATA: break;
+      case FIELD_GPS_LLH_POSITION: break;
+      case FIELD_GPS_ECEF_POSITION: break;
+      case FIELD_GPS_NED_VELOCITY: break;
+      case FIELD_GPS_ECEF_VELOCITY: break;
+      case FIELD_GPS_DOP_DATA: break;
 
-      case FILED_GPS_UTC_TIME: break;
-      case FILED_GPS_TIME: break;
-      case FILED_GPS_CLOCK_INFORMATION: break;
-      case FILED_GPS_FIX_INFORMATION:
+      case FIELD_GPS_UTC_TIME: break;
+      case FIELD_GPS_TIME: break;
+      case FIELD_GPS_CLOCK_INFORMATION: break;
+      case FIELD_GPS_FIX_INFORMATION:
       {
         uint8_t d12[2];
         uint16_t d34[2];
         received_packet_.extract(2, d12);
         received_packet_.extract(2, d34);
-        printf("gps: 0x%02x 0x%02x 0x%04x 0x%04x\n", d12[0], d12[1], d34[0], d34[1]);
+        //printf("gps: 0x%02x 0x%02x 0x%04x 0x%04x\n", d12[0], d12[1], d34[0], d34[1]);
         break;
       }
-      case FILED_GPS_SPACE_VEHICLE_INFORMATION: break;
+      case FIELD_GPS_SPACE_VEHICLE_INFORMATION: break;
 
-      case FILED_GPS_HARDWARE_STATUS: break;
-      case FILED_DGPS_INFORMATION: break;
-      case FILED_DGPS_CHANNEL_STATUS: break;
+      case FIELD_GPS_HARDWARE_STATUS: break;
+      case FIELD_DGPS_INFORMATION: break;
+      case FIELD_DGPS_CHANNEL_STATUS: break;
       default:
         return;
     }
@@ -566,8 +592,9 @@ void Hg3dmGx4::processEFPacket()
 
       case FIELD_EF_ORIENTATION_MATRIX: break;
       case FIELD_EF_ORIENTATION_EULER:
-        //received_packet_.extract(3, data);
-        //printf("rpy: %8.3f %8.3f %8.3f\n", data[0], data[1], data[2]);
+        float ryp[3];
+        received_packet_.extract(3, ryp);
+        //printf("rpy: %8.3f %8.3f %8.3f\n", ryp[0], ryp[1], ryp[2]);
         break;
       case FIELD_EF_GYRO_BIAS: break;
       case FIELD_EF_ACCEL_BIAS: break;
