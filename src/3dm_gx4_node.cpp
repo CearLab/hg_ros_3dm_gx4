@@ -30,7 +30,7 @@ void publishIMUData(const hg_3dm_gx4::IMUData& data)
 
   double roll,pitch,yaw;  m.getRPY(roll, pitch, yaw);
 
-  q.setRPY(roll, -pitch, -yaw);
+  q.setRPY(-(roll - M_PI/2.0), pitch, -yaw + M_PI);
 
   g_imu.orientation.w = q.w();
   g_imu.orientation.x = q.x();
@@ -39,11 +39,11 @@ void publishIMUData(const hg_3dm_gx4::IMUData& data)
 
 
   g_imu.linear_acceleration.x = data.scaled_accelerometer[0];
-  g_imu.linear_acceleration.y = -data.scaled_accelerometer[1];
-  g_imu.linear_acceleration.z = -data.scaled_accelerometer[2];
+  g_imu.linear_acceleration.y = -data.scaled_accelerometer[2];
+  g_imu.linear_acceleration.z = -data.scaled_accelerometer[1];
   g_imu.angular_velocity.x = data.scaled_gyro[0];
-  g_imu.angular_velocity.y = -data.scaled_gyro[1];
-  g_imu.angular_velocity.z = -data.scaled_gyro[2];
+  g_imu.angular_velocity.y = -data.scaled_gyro[2];
+  g_imu.angular_velocity.z = -data.scaled_gyro[1];
 
   g_pub_imu.publish(g_imu);
 }
