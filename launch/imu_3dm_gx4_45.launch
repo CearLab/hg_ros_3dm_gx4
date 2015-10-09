@@ -1,27 +1,29 @@
 <launch>
     <!-- Node Settings -->
     <arg name="output" default="screen"/>
-	
-    <arg name="topic" default="/imu/data"/>
 
     <!-- IMU Settings -->
     <arg name="device" default="/dev/ttyACM0" />
 
-    <!-- Frame ID for messages -->
-    <arg name="frame_id" default="imu"/>
-
     <!-- Baudrate of serial comms (see manual for allowed values) -->
     <arg name="baudrate" default="460800"/>
-    
-    <!-- Data rate in Hz -->
-    <arg name="imu_rate" default="100"/>    
 
-    <node pkg="hg_ros_3dm_gx4" name="gx4_45_imu" type="3dm_gx4_node" output="$(arg output)">
-        <param name="topic" type="string" value="$(arg topic)" />
+    <!-- Data rate in Hz -->
+    <arg name="imu_rate" default="100"/>
+
+    <!-- IMU frame-->
+    <arg name="imu_frame_id" default="gx4_45_imu_link"/>
+
+    <!-- GPS frame-->
+    <arg name="gps_frame_id" default="gx4_45_gps_link"/>
+
+    <!-- Data rate in Hz -->
+    <arg name="imu_rate" default="100"/>
+
+    <node pkg="hg_ros_3dm_gx4" name="gx4_45" type="3dm_gx4_node" output="$(arg output)">
         <param name="device" type="string" value="$(arg device)" />
         <param name="baudrate" type="int" value="$(arg baudrate)" />
-        <param name="frame_id" type="string" value="$(arg frame_id)"/>
-        <!--param name="fir" type="int" value="$(arg fir)" /-->
-        <param name="imu_rate" type="int" value="$(arg imu_rate)" />        
-    </node>        
+        <param name="imu_frame_id" type="string" value="$(arg imu_frame_id)" />
+        <param name="gps_frame_id" type="string" value="$(arg gps_frame_id)" />
+    </node>
 </launch>

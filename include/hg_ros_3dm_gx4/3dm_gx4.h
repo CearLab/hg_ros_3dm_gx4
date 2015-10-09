@@ -5,8 +5,8 @@
  *      Author: mahisorn
  */
 
-#ifndef SOURCE_DIRECTORY__HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_
-#define SOURCE_DIRECTORY__HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_
+#ifndef _HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_
+#define _HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_
 
 #include <boost/function.hpp>
 #include <hg_ros_serial/serial.h>
@@ -102,4 +102,4 @@ protected:
 }
 
 
-#endif /* SOURCE_DIRECTORY__HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_ */
+#endif /* _HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_ */

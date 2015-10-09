@@ -82,9 +82,7 @@ int main()
   }
   else
   {
-    std::cout << "Shit!\n";
+    std::cout << "Could not open!\n";
   }
   return 0;
 }
-
-
