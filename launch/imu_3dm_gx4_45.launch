@@ -17,9 +17,6 @@
     <!-- GPS frame-->
     <arg name="gps_frame_id" default="gx4_45_gps_link"/>
 
-    <!-- Data rate in Hz -->
-    <arg name="imu_rate" default="100"/>
-
     <node pkg="hg_ros_3dm_gx4" name="gx4_45" type="3dm_gx4_node" output="$(arg output)">
         <param name="device" type="string" value="$(arg device)" />
         <param name="baudrate" type="int" value="$(arg baudrate)" />
