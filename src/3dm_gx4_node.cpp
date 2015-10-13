@@ -76,7 +76,7 @@ void publishEFData(const hg_3dm_gx4::EFData& data)
 
   if (data.status < 0x02)
   {
-    ROS_WARN_THROTTLE(5, "Filter not running.");
+    ROS_WARN_THROTTLE(5, "Filter not running with status flag: %x04.", data.status_flag);
   }
   else
   {
@@ -140,9 +140,10 @@ void publishEFData(const hg_3dm_gx4::EFData& data)
     g_pub_filtered_imu.publish(g_filtered_imu);
     g_pub_filtered_fix.publish(g_filtered_fix);
     g_pub_filtered_vel.publish(g_filtered_vel);
+
     if (data.status == 0x03)
     {
-      ROS_WARN_THROTTLE(5, "Filter running but solution is not valid.");
+      ROS_WARN_THROTTLE(5, "Filter running but solution is not valid with status flag %x04.", data.status_flag);
     }
   }
 }
@@ -162,6 +163,7 @@ void publishGPSData(const hg_3dm_gx4::GPSData& data)
 
   if (data.status == 0x04)  // Invalid
   {
+    ROS_WARN_THROTTLE(30, "Invalid fix.");
     return;
   }
   else if (data.status == 0x03)  // None

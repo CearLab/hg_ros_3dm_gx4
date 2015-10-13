@@ -264,7 +264,9 @@ struct EFData
 
   uint32_t fields;
 
-  uint8_t status;
+  uint16_t status;
+  uint16_t dynamics_mode;
+  uint16_t status_flag;
   double llh[3];
   double llh_uncertainty[3];
   float vel[3];

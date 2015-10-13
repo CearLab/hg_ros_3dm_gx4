@@ -605,9 +605,9 @@ void Hg3dmGx4::processEFPacket()
     {
       case FIELD_EF_FILTER_STATUS:
       {
-        uint16_t status[3];
-        received_packet_.extract(3, status);
-        data.status = status[0];
+        received_packet_.extract(1, &data.status);
+        received_packet_.extract(1, &data.dynamics_mode);
+        received_packet_.extract(1, &data.status_flag);
         //printf("filter status: 0x%04x 0x%04x 0x%04x\n", status[0], status[1], status[2]);
         break;
       }
