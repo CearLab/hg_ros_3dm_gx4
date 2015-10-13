@@ -158,7 +158,7 @@ struct IMUData
   };
 
   static const float GAUSS_TO_TESLA = 0.0001;
-  static const float G_TO_ACCLERATION = 9.81;
+  static const float G_TO_ACCELERATION = 9.81;
 
   uint32_t fields;
   float scaled_accelerometer[3];

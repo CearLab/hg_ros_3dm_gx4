@@ -21,12 +21,14 @@ include_directories(
 add_library(hg_ros_serial src/serial.cpp)
 
 add_executable(3dm_gx4_test src/3dm_gx4_test.cpp src/3dm_gx4.cpp)
+
 target_link_libraries(3dm_gx4_test hg_ros_serial
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
 add_executable(3dm_gx4_node src/3dm_gx4_node.cpp src/3dm_gx4.cpp)
+
 target_link_libraries(3dm_gx4_node hg_ros_serial
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}

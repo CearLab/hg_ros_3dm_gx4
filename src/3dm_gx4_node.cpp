@@ -27,19 +27,19 @@ ros::Publisher g_pub_navsat_tf;
 ros::Publisher g_pub_filtered_imu;
 ros::Publisher g_pub_filtered_fix;
 ros::Publisher g_pub_filtered_vel;
-sensor_msgs::Imu g_raw_imu;
-sensor_msgs::MagneticField g_raw_mag;
-sensor_msgs::NavSatFix g_navsat_fix;
-geometry_msgs::TwistStamped g_navsat_vel;
-sensor_msgs::TimeReference g_navsat_tf;
-sensor_msgs::Imu g_filtered_imu;
-sensor_msgs::NavSatFix g_filtered_fix;
-geometry_msgs::TwistWithCovarianceStamped g_filtered_vel;
+
+std::string gps_frame_id;
+std::string imu_frame_id;
 
 void publishIMUData(const hg_3dm_gx4::IMUData& data)
 {
+  sensor_msgs::Imu g_raw_imu;
+  sensor_msgs::MagneticField g_raw_mag;
+
   g_raw_imu.header.stamp = ros::Time::now();
-  g_raw_imu.header.stamp = g_raw_imu.header.stamp;
+  g_raw_imu.header.frame_id = imu_frame_id;
+  g_raw_mag.header.stamp = g_raw_imu.header.stamp;
+  g_raw_mag.header.frame_id = imu_frame_id;
 
   // In world frame.
   g_raw_imu.orientation.w =  data.orientation_quaternion[3];
@@ -52,9 +52,9 @@ void publishIMUData(const hg_3dm_gx4::IMUData& data)
   g_raw_mag.magnetic_field.z = -data.scaled_magneto[2] * data.GAUSS_TO_TESLA;
 
   // In body-fixed frame.
-  g_raw_imu.linear_acceleration.x =  data.scaled_accelerometer[0] * data.G_TO_ACCLERATION;
-  g_raw_imu.linear_acceleration.y = -data.scaled_accelerometer[1] * data.G_TO_ACCLERATION;
-  g_raw_imu.linear_acceleration.z = -data.scaled_accelerometer[2] * data.G_TO_ACCLERATION;
+  g_raw_imu.linear_acceleration.x =  data.scaled_accelerometer[0] * data.G_TO_ACCELERATION;
+  g_raw_imu.linear_acceleration.y = -data.scaled_accelerometer[1] * data.G_TO_ACCELERATION;
+  g_raw_imu.linear_acceleration.z = -data.scaled_accelerometer[2] * data.G_TO_ACCELERATION;
   g_raw_imu.angular_velocity.x =  data.scaled_gyro[0];
   g_raw_imu.angular_velocity.y = -data.scaled_gyro[1];
   g_raw_imu.angular_velocity.z = -data.scaled_gyro[2];
@@ -65,6 +65,15 @@ void publishIMUData(const hg_3dm_gx4::IMUData& data)
 
 void publishEFData(const hg_3dm_gx4::EFData& data)
 {
+
+  sensor_msgs::Imu g_filtered_imu;
+  sensor_msgs::NavSatFix g_filtered_fix;
+  geometry_msgs::TwistWithCovarianceStamped g_filtered_vel;
+
+  g_filtered_imu.header.frame_id = imu_frame_id;
+  g_filtered_fix.header.frame_id = gps_frame_id;
+  g_filtered_vel.header.frame_id = gps_frame_id;
+
   if (data.status < 0x02)
   {
     ROS_WARN_THROTTLE(5, "Filter not running.");
@@ -140,9 +149,16 @@ void publishEFData(const hg_3dm_gx4::EFData& data)
 
 void publishGPSData(const hg_3dm_gx4::GPSData& data)
 {
+  sensor_msgs::NavSatFix g_navsat_fix;
+  geometry_msgs::TwistStamped g_navsat_vel;
+  sensor_msgs::TimeReference g_navsat_tf;
+
   g_navsat_fix.header.stamp = ros::Time::now();
   g_navsat_vel.header.stamp = g_navsat_fix.header.stamp;
   g_navsat_tf.header.stamp = g_navsat_fix.header.stamp;
+
+  g_navsat_fix.header.frame_id = gps_frame_id;
+  g_navsat_vel.header.frame_id = gps_frame_id;
 
   if (data.status == 0x04)  // Invalid
   {
@@ -222,8 +238,6 @@ int main(int argc, char **argv)
   std::string filter_prefix;
   std::string device;
   int baudrate;
-  std::string gps_frame_id;
-  std::string imu_frame_id;
   int imu_rate;
   int gps_rate;
 
@@ -268,13 +282,6 @@ int main(int argc, char **argv)
     ROS_WARN("Min frequency should be 1! 1 Hz will be set");
     gps_rate = 1;
   }
-
-  g_raw_imu.header.frame_id = imu_frame_id;
-  g_filtered_imu.header.frame_id = imu_frame_id;
-  g_navsat_fix.header.frame_id = gps_frame_id;
-  g_navsat_vel.header.frame_id = gps_frame_id;
-  g_filtered_fix.header.frame_id = gps_frame_id;
-  g_filtered_vel.header.frame_id = gps_frame_id;
 
   static const int imu_decimation = (500/imu_rate);
   static const int gps_decimation = (4/gps_rate);
