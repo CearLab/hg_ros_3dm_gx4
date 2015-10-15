@@ -5,8 +5,8 @@
  *      Author: mahisorn
  */
 
-#ifndef SOURCE_DIRECTORY__HG_3DM_GX4_INCLUDE_HG_3DM_GX4_MIP_H_
-#define SOURCE_DIRECTORY__HG_3DM_GX4_INCLUDE_HG_3DM_GX4_MIP_H_
+#ifndef _HG_3DM_GX4_INCLUDE_HG_3DM_GX4_MIP_H_
+#define _HG_3DM_GX4_INCLUDE_HG_3DM_GX4_MIP_H_
 
 #include <hg_ros_serial/serial.h>
 
@@ -157,6 +157,9 @@ struct IMUData
     NUM_IMU_DATA = 12
   };
 
+  static const float GAUSS_TO_TESLA = 0.0001;
+  static const float G_TO_ACCELERATION = 9.81;
+
   uint32_t fields;
   float scaled_accelerometer[3];
   float scaled_gyro[3];
@@ -193,7 +196,27 @@ struct GPSData
     DGPS_CHANNEL_STATUS = (1 << 12),
 
     NUM_GPS_DATA = 13
+
   };
+
+  uint32_t fields;
+  uint8_t status;
+  uint16_t status_flag;
+  double llh[4];  // Lat, Long, Height above ellipsoid, Height above MSL.
+  float llh_accuracy[2];  // Horizonal Accuracy, Vertical Accuracy.
+  float vel[3];
+  float vel_accuracy;
+  uint16_t year;
+  uint8_t date[5];
+  uint32_t mills;
+  uint32_t posix_time;
+
+
+  GPSData()
+    : fields(0)
+  {
+
+  }
 };
 
 struct EFData
@@ -241,15 +264,19 @@ struct EFData
 
   uint32_t fields;
 
-  //TODO add all fields
+  uint16_t status;
+  uint16_t dynamics_mode;
+  uint16_t status_flag;
+  double llh[3];
+  double llh_uncertainty[3];
+  float vel[3];
+  float vel_uncertainty[3];
   float orientation_quaternion[4];
-
+  float orientation_uncertainty[4];
   float compensated_acceleration[3];
+  float uncertainty_acceleration[3];
   float compensated_angular_rate[3];
-  //WGS84_LOCAL_GRAVITY_MAGNITUDE
-  //ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT
-  float gravity_vector[3];
-
+  float uncertainty_angular_rate[3];
 
 };
 
@@ -511,4 +538,4 @@ private:
 
 
 
-#endif /* SOURCE_DIRECTORY__HG_3DM_GX4_INCLUDE_HG_3DM_GX4_MIP_H_ */
+#endif /* _HG_3DM_GX4_INCLUDE_HG_3DM_GX4_MIP_H_ */

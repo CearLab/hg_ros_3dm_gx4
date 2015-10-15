@@ -476,26 +476,23 @@ void Hg3dmGx4::processPacket()
 
 void Hg3dmGx4::processIMUPacket()
 {
-  //float data[10];
   IMUData data;
-  while (true)
+  uint8_t fields = 0;
+  while (fields < IMUData::NUM_IMU_DATA)
   {
     switch (received_packet_.getFieldDescriptor())
     {
       case FIELD_IMU_SCALED_ACCELEROMETER:
         received_packet_.extract(3, data.scaled_accelerometer);
         data.fields |= IMUData::SCALED_ACCELEROMETER;
-        //printf("acc: %8.3f %8.3f %8.3f\n", data.scaled_accelerometer[0], data.scaled_accelerometer[1], data.scaled_accelerometer[2]);
         break;
       case FIELD_IMU_SCALED_GYRO:
         received_packet_.extract(3, data.scaled_gyro);
         data.fields |= IMUData::SCALED_GYRO;
-        //printf("gyr: %8.3f %8.3f %8.3f\n", data.scaled_gyro[0], data.scaled_gyro[1], data.scaled_gyro[2]);
         break;
       case FIELD_IMU_SCALED_MAGNETO:
-        data.fields |= IMUData::SCALED_MAGNETO;
         received_packet_.extract(3, data.scaled_magneto);
-        //printf("mag: %8.3f %8.3f %8.3f\n", data.scaled_magneto[0], data.scaled_magneto[1], data.scaled_magneto[2]);
+        data.fields |= IMUData::SCALED_MAGNETO;
         break;
       case FIELD_IMU_SCALED_PRESSURE:
         break;
@@ -506,9 +503,8 @@ void Hg3dmGx4::processIMUPacket()
       case FIELD_IMU_CF_ORIENTATION_MATRIX:
         break;
       case FIELD_IMU_CF_QUATERNION:
-        data.fields |= IMUData::CF_QUATERNION;
         received_packet_.extract(4, data.orientation_quaternion);
-        //printf("cf_qua: %8.3f %8.3f %8.3f %8.3f\n", data.orientation_quaternion[0], data.orientation_quaternion[1], data.orientation_quaternion[2], data.orientation_quaternion[3]);
+        data.fields |= IMUData::CF_QUATERNION;
         break;
       case FIELD_IMU_CF_EULAR_ANGLES:
         break;
@@ -519,7 +515,7 @@ void Hg3dmGx4::processIMUPacket()
       case FIELD_IMU_GPS_CORRELATION_TIMESTAMP:
         break;
       default:
-        //no more data
+        //  no more data
         if(imu_data_callback_)
         {
           imu_data_callback_(data);
@@ -527,32 +523,55 @@ void Hg3dmGx4::processIMUPacket()
         return;
     }
     received_packet_.nextField();
+    fields++;
   }
 }
 
 void Hg3dmGx4::processGPSPacket()
 {
-  //std::cout << __FUNCTION__ << std::endl;
-  while (true)
+  GPSData data;
+  uint8_t fields = 0;
+  while (fields < GPSData::NUM_GPS_DATA)
   {
     switch (received_packet_.getFieldDescriptor())
     {
-      case FIELD_GPS_LLH_POSITION: break;
+      case FIELD_GPS_LLH_POSITION:
+        data.fields |= GPSData::LLH_POSITION;
+        received_packet_.extract(4, data.llh);
+        received_packet_.extract(2, data.llh_accuracy);
+        break;
       case FIELD_GPS_ECEF_POSITION: break;
-      case FIELD_GPS_NED_VELOCITY: break;
-      case FIELD_GPS_ECEF_VELOCITY: break;
+      case FIELD_GPS_NED_VELOCITY:
+        received_packet_.extract(3, data.vel);
+        received_packet_.extract(1, &data.vel_accuracy);
+        break;
+      case FIELD_GPS_ECEF_VELOCITY:break;
       case FIELD_GPS_DOP_DATA: break;
-
-      case FIELD_GPS_UTC_TIME: break;
+      case FIELD_GPS_UTC_TIME:
+        received_packet_.extract(1, &data.year);
+        received_packet_.extract(5, data.date);
+        received_packet_.extract(1, &data.mills);
+        struct tm time_str;
+        time_str.tm_year = data.year - 1900;
+        time_str.tm_mon = data.date[0] - 1;
+        time_str.tm_mday = data.date[1] -1;
+        time_str.tm_hour = data.date[2];
+        time_str.tm_min = data.date[3];
+        time_str.tm_sec = data.date[4];
+        time_str.tm_isdst = -1;
+        data.posix_time = mktime(&time_str);
+        break;
       case FIELD_GPS_TIME: break;
       case FIELD_GPS_CLOCK_INFORMATION: break;
       case FIELD_GPS_FIX_INFORMATION:
       {
+        data.fields |= GPSData::FIX_INFORMATION;
         uint8_t d12[2];
         uint16_t d34[2];
         received_packet_.extract(2, d12);
         received_packet_.extract(2, d34);
-        //printf("gps: 0x%02x 0x%02x 0x%04x 0x%04x\n", d12[0], d12[1], d34[0], d34[1]);
+        data.status = d12[0];
+        data.status_flag = d34[1];
         break;
       }
       case FIELD_GPS_SPACE_VEHICLE_INFORMATION: break;
@@ -561,67 +580,85 @@ void Hg3dmGx4::processGPSPacket()
       case FIELD_DGPS_INFORMATION: break;
       case FIELD_DGPS_CHANNEL_STATUS: break;
       default:
+        if(gps_data_callback_)
+        {
+          gps_data_callback_(data);
+        }
         return;
     }
     received_packet_.nextField();
+    fields++;
   }
 }
 
 void Hg3dmGx4::processEFPacket()
 {
   EFData data;
-  while (true)
+  uint8_t fields = 0;
+  while (fields < EFData::NUM_EF_DATA)
   {
     switch (received_packet_.getFieldDescriptor())
     {
       case FIELD_EF_FILTER_STATUS:
       {
-        //uint16_t status[3];
-        //received_packet_.extract(3, status);
-        //printf("sta: 0x%04x 0x%04x 0x%04x\n", status[0], status[1], status[2]);
+        received_packet_.extract(1, &data.status);
+        received_packet_.extract(1, &data.dynamics_mode);
+        received_packet_.extract(1, &data.status_flag);
         break;
       }
       case FIELD_EF_GPS_TIMESTAMP: break;
-      case FIELD_EF_LLH_POSITION: break;
-      case FIELD_EF_NED_VELOCITY: break;
+      case FIELD_EF_LLH_POSITION:
+        data.fields |= EFData::LLH_POSITION;
+        received_packet_.extract(3, data.llh);
+        break;
+      case FIELD_EF_NED_VELOCITY:
+        data.fields |= EFData::NED_VELOCITY;
+        received_packet_.extract(3, data.vel);
+        break;
       case FIELD_EF_ORIENTATION_QUATERNION:
         received_packet_.extract(4, data.orientation_quaternion);
         data.fields |= EFData::ORIENTATION_QUATERNION;
-        //printf("ef_qua: %8.3f %8.3f %8.3f %8.3f\n", data.orientation_quaternion[0], data.orientation_quaternion[1], data.orientation_quaternion[2], data.orientation_quaternion[3]);
         break;
 
       case FIELD_EF_ORIENTATION_MATRIX: break;
-      case FIELD_EF_ORIENTATION_EULER:
-        float ryp[3];
-        received_packet_.extract(3, ryp);
-        //printf("rpy: %8.3f %8.3f %8.3f\n", ryp[0], ryp[1], ryp[2]);
-        break;
+      case FIELD_EF_ORIENTATION_EULER: break;
       case FIELD_EF_GYRO_BIAS: break;
       case FIELD_EF_ACCEL_BIAS: break;
-      case FIELD_EF_LLH_POSITION_UNCERTAINTY: break;
-
-      case FIELD_EF_NED_VELOCITY_UNCERTAINTY: break;
-      case FIELD_EF_ALTITUDE_UNCERTAINTY: break;
-      case FIELD_EF_GYRO_BIAS_UNCERTAINTY: break;
-      case FIELD_EF_ACCEL_BIAS_UNCERTAINTY: break;
+      case FIELD_EF_LLH_POSITION_UNCERTAINTY:
+        data.fields |= EFData::LLH_POSITION_UNCERTAINTY;
+        received_packet_.extract(3, data.llh_uncertainty);
+        break;
+      case FIELD_EF_NED_VELOCITY_UNCERTAINTY:
+        data.fields |= EFData::NED_VELOCITY_UNCERTAINTY;
+        received_packet_.extract(3, data.vel_uncertainty);
+        break;
+      case FIELD_EF_ALTITUDE_UNCERTAINTY:
+        received_packet_.extract(4, data.orientation_uncertainty);
+        data.fields |= EFData::ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT;
+        break;
+      case FIELD_EF_GYRO_BIAS_UNCERTAINTY:
+        received_packet_.extract(3, data.uncertainty_angular_rate);
+        data.fields |= EFData::GYRO_BIAS_UNCERTAINTY;
+        break;
+      case FIELD_EF_ACCEL_BIAS_UNCERTAINTY:
+        received_packet_.extract(3, data.uncertainty_acceleration);
+        data.fields |= EFData::ACCEL_BIAS_UNCERTAINTY;
+        break;
       case FIELD_EF_LINEAER_ACCELERATION: break;
 
       case FIELD_EF_COMPENSATED_ACCELERATION:
         received_packet_.extract(3, data.compensated_acceleration);
         data.fields |= EFData::COMPENSATED_ACCELERATION;
-        //printf("ef_acc: %8.3f %8.3f %8.3f\n", data.compensated_acceleration[0], data.compensated_acceleration[1], data.compensated_acceleration[2]);
         break;
       case FIELD_EF_COMPENSATED_ANGULAR_RATE:
         received_packet_.extract(3, data.compensated_angular_rate);
         data.fields |= EFData::COMPENSATED_ANGULAR_RATE;
-        //printf("ef_gyr: %8.3f %8.3f %8.3f\n", data.compensated_angular_rate[0], data.compensated_angular_rate[1], data.compensated_angular_rate[2]);
         break;
       case FIELD_EF_WGS84_LOCAL_GRAVITY_MAGNITUDE: break;
       case FIELD_EF_ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT: break;
       case FIELD_EF_GRAVITY_VECTOR:
-        received_packet_.extract(3, data.gravity_vector);
-        data.fields |= EFData::GRAVITY_VECTOR;
-        //printf("ef_grv: %8.3f %8.3f %8.3f\n", data.gravity_vector[0], data.gravity_vector[1], data.gravity_vector[2]);
+        //  received_packet_.extract(3, data.gravity_vector);
+        //  data.fields |= EFData::GRAVITY_VECTOR;
         break;
 
       case FIELD_EF_HEADING_UPDATE_SOURCE_STATE: break;
@@ -629,14 +666,13 @@ void Hg3dmGx4::processEFPacket()
       case FIELD_EF_GYRO_SCALE_FACTOR: break;
       case FIELD_EF_ACCEL_SCALE_FACTOR: break;
       case FIELD_EF_GYRO_SCALE_FACTOR_UNCERTAINTY: break;
-
       case FIELD_EF_ACCEL_SCALE_FACTOR_UNCERTAINTY: break;
       case FIELD_EF_STANDARD_ATMOSPHERE_MODEL: break;
       case FIELD_EF_PRESSURE_ALTITUDE: break;
       case FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION: break;
       case FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION_UNCERTAINTY: break;
       default:
-        //no more data
+        //  no more data
         if (ef_data_callback_)
         {
           ef_data_callback_(data);
@@ -644,18 +680,19 @@ void Hg3dmGx4::processEFPacket()
         return;
     }
     received_packet_.nextField();
+    fields++;
   }
 }
 
 void Hg3dmGx4::processRespondPacket()
 {
-  //Find ACK/NACK
+  //  Find ACK/NACK
   if(received_packet_.payload[1] == FIELD_ACK_NACK)
   {
     if(received_packet_.payload[3] == 0x00)
     {
-      //Got ACK
-      //std::cout << "Found ACK field" << std::endl;
+      //  Got ACK
+      //  std::cout << "Found ACK field" << std::endl;
     }
     else
     {
