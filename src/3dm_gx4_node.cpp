@@ -103,7 +103,7 @@ void publishEFData(const hg_3dm_gx4::EFData& data)
     m.getRPY(g_filtered_imu.orientation_covariance[4],
       g_filtered_imu.orientation_covariance[0], g_filtered_imu.orientation_covariance[8]);
 
-     g_filtered_imu.orientation_covariance[8] *= -1;
+    g_filtered_imu.orientation_covariance[8] *= -1;
 
     g_filtered_imu.linear_acceleration_covariance[0] =
       data.uncertainty_acceleration[0] * data.uncertainty_acceleration[0];
@@ -144,6 +144,10 @@ void publishEFData(const hg_3dm_gx4::EFData& data)
     if (data.status == 0x03)
     {
       ROS_WARN_THROTTLE(5, "Filter running but solution is not valid with status flag %x04.", data.status_flag);
+    }
+    else
+    {
+      ROS_DEBUG("Filter running with valid solution");
     }
   }
 }
@@ -261,14 +265,14 @@ int main(int argc, char **argv)
 
   imu.ping();
   imu.idle();
-  imu.selectBaudRate(460800);
+  imu.selectBaudRate(baudrate);
 
   if(imu_rate > 500)
   {
     ROS_WARN("Max frequency is 500!");
     imu_rate = 500;
   }
-  else if(imu_rate < 0)
+  else if(imu_rate <= 0)
   {
     ROS_WARN("Min frequency should be 1! 100 Hz will be set");
     imu_rate = 100;
@@ -279,7 +283,7 @@ int main(int argc, char **argv)
     ROS_WARN("Max frequency is 4!");
     gps_rate = 4;
   }
-  else if(gps_rate < 0)
+  else if(gps_rate <= 0)
   {
     ROS_WARN("Min frequency should be 1! 1 Hz will be set");
     gps_rate = 1;

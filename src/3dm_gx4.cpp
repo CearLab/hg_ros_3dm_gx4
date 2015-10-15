@@ -478,7 +478,8 @@ void Hg3dmGx4::processIMUPacket()
 {
   //float data[10];
   IMUData data;
-  while (true)
+  uint8_t fields = 0;
+  while (fields < IMUData::NUM_IMU_DATA)
   {
     switch (received_packet_.getFieldDescriptor())
     {
@@ -493,8 +494,8 @@ void Hg3dmGx4::processIMUPacket()
         //printf("gyr: %8.3f %8.3f %8.3f\n", data.scaled_gyro[0], data.scaled_gyro[1], data.scaled_gyro[2]);
         break;
       case FIELD_IMU_SCALED_MAGNETO:
-        data.fields |= IMUData::SCALED_MAGNETO;
         received_packet_.extract(3, data.scaled_magneto);
+        data.fields |= IMUData::SCALED_MAGNETO;
         //printf("mag: %8.3f %8.3f %8.3f\n", data.scaled_magneto[0], data.scaled_magneto[1], data.scaled_magneto[2]);
         break;
       case FIELD_IMU_SCALED_PRESSURE:
@@ -506,8 +507,8 @@ void Hg3dmGx4::processIMUPacket()
       case FIELD_IMU_CF_ORIENTATION_MATRIX:
         break;
       case FIELD_IMU_CF_QUATERNION:
-        data.fields |= IMUData::CF_QUATERNION;
         received_packet_.extract(4, data.orientation_quaternion);
+        data.fields |= IMUData::CF_QUATERNION;
         //printf("cf_qua: %8.3f %8.3f %8.3f %8.3f\n", data.orientation_quaternion[0], data.orientation_quaternion[1], data.orientation_quaternion[2], data.orientation_quaternion[3]);
         break;
       case FIELD_IMU_CF_EULAR_ANGLES:
@@ -527,6 +528,7 @@ void Hg3dmGx4::processIMUPacket()
         return;
     }
     received_packet_.nextField();
+    fields++;
   }
 }
 
@@ -534,7 +536,8 @@ void Hg3dmGx4::processGPSPacket()
 {
   //std::cout << __FUNCTION__ << std::endl;
   GPSData data;
-  while (true)
+  uint8_t fields = 0;
+  while (fields < GPSData::NUM_GPS_DATA)
   {
     switch (received_packet_.getFieldDescriptor())
     {
@@ -593,13 +596,15 @@ void Hg3dmGx4::processGPSPacket()
         return;
     }
     received_packet_.nextField();
+    fields++;
   }
 }
 
 void Hg3dmGx4::processEFPacket()
 {
   EFData data;
-  while (true)
+  uint8_t fields = 0;
+  while (fields < EFData::NUM_EF_DATA)
   {
     switch (received_packet_.getFieldDescriptor())
     {
@@ -643,7 +648,7 @@ void Hg3dmGx4::processEFPacket()
         received_packet_.extract(3, data.vel_uncertainty);
         break;
       case FIELD_EF_ALTITUDE_UNCERTAINTY:
-        printf("Got q error\n");
+        //printf("Got q error\n");
         received_packet_.extract(4, data.orientation_uncertainty);
         data.fields |= EFData::ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT;
         break;
@@ -694,6 +699,7 @@ void Hg3dmGx4::processEFPacket()
         return;
     }
     received_packet_.nextField();
+    fields++;
   }
 }
 
