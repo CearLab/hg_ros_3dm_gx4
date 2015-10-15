@@ -300,7 +300,7 @@ int main(int argc, char **argv)
                      0);
 
 
-imu.setEFDataRate(imu_decimation,
+  imu.setEFDataRate(imu_decimation,
                     hg_3dm_gx4::EFData::FILTER_STATUS |
                     hg_3dm_gx4::EFData::LLH_POSITION |
                     hg_3dm_gx4::EFData::LLH_POSITION_UNCERTAINTY |

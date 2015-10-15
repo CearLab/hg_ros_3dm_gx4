@@ -8,8 +8,11 @@
     <!-- Baudrate of serial comms (see manual for allowed values) -->
     <arg name="baudrate" default="460800"/>
 
-    <!-- Data rate in Hz -->
+    <!-- IMU data rate in Hz -->
     <arg name="imu_rate" default="100"/>
+
+    <!-- GPS data rate in Hz -->
+    <arg name="gps_rate" default="2"/>
 
     <!-- IMU frame-->
     <arg name="imu_frame_id" default="gx4_45_imu_link"/>
@@ -22,5 +25,7 @@
         <param name="baudrate" type="int" value="$(arg baudrate)" />
         <param name="imu_frame_id" type="string" value="$(arg imu_frame_id)" />
         <param name="gps_frame_id" type="string" value="$(arg gps_frame_id)" />
+        <param name="imu_rate" type="int" value="$(arg imu_rate)" />
+        <param name="gps_rate" type="int" value="$(arg gps_rate)" />
     </node>
 </launch>

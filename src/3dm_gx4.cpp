@@ -476,7 +476,6 @@ void Hg3dmGx4::processPacket()
 
 void Hg3dmGx4::processIMUPacket()
 {
-  //float data[10];
   IMUData data;
   uint8_t fields = 0;
   while (fields < IMUData::NUM_IMU_DATA)
@@ -486,17 +485,14 @@ void Hg3dmGx4::processIMUPacket()
       case FIELD_IMU_SCALED_ACCELEROMETER:
         received_packet_.extract(3, data.scaled_accelerometer);
         data.fields |= IMUData::SCALED_ACCELEROMETER;
-        //printf("acc: %8.3f %8.3f %8.3f\n", data.scaled_accelerometer[0], data.scaled_accelerometer[1], data.scaled_accelerometer[2]);
         break;
       case FIELD_IMU_SCALED_GYRO:
         received_packet_.extract(3, data.scaled_gyro);
         data.fields |= IMUData::SCALED_GYRO;
-        //printf("gyr: %8.3f %8.3f %8.3f\n", data.scaled_gyro[0], data.scaled_gyro[1], data.scaled_gyro[2]);
         break;
       case FIELD_IMU_SCALED_MAGNETO:
         received_packet_.extract(3, data.scaled_magneto);
         data.fields |= IMUData::SCALED_MAGNETO;
-        //printf("mag: %8.3f %8.3f %8.3f\n", data.scaled_magneto[0], data.scaled_magneto[1], data.scaled_magneto[2]);
         break;
       case FIELD_IMU_SCALED_PRESSURE:
         break;
@@ -509,7 +505,6 @@ void Hg3dmGx4::processIMUPacket()
       case FIELD_IMU_CF_QUATERNION:
         received_packet_.extract(4, data.orientation_quaternion);
         data.fields |= IMUData::CF_QUATERNION;
-        //printf("cf_qua: %8.3f %8.3f %8.3f %8.3f\n", data.orientation_quaternion[0], data.orientation_quaternion[1], data.orientation_quaternion[2], data.orientation_quaternion[3]);
         break;
       case FIELD_IMU_CF_EULAR_ANGLES:
         break;
@@ -520,7 +515,7 @@ void Hg3dmGx4::processIMUPacket()
       case FIELD_IMU_GPS_CORRELATION_TIMESTAMP:
         break;
       default:
-        //no more data
+        //  no more data
         if(imu_data_callback_)
         {
           imu_data_callback_(data);
@@ -534,7 +529,6 @@ void Hg3dmGx4::processIMUPacket()
 
 void Hg3dmGx4::processGPSPacket()
 {
-  //std::cout << __FUNCTION__ << std::endl;
   GPSData data;
   uint8_t fields = 0;
   while (fields < GPSData::NUM_GPS_DATA)
@@ -557,7 +551,6 @@ void Hg3dmGx4::processGPSPacket()
         received_packet_.extract(1, &data.year);
         received_packet_.extract(5, data.date);
         received_packet_.extract(1, &data.mills);
-        //printf("time: %i, %i, %i, %i, %i, %i\n", data.year, data.date[0], data.date[1], data.date[2], data.date[3], data.date[4]);
         struct tm time_str;
         time_str.tm_year = data.year - 1900;
         time_str.tm_mon = data.date[0] - 1;
@@ -579,8 +572,6 @@ void Hg3dmGx4::processGPSPacket()
         received_packet_.extract(2, d34);
         data.status = d12[0];
         data.status_flag = d34[1];
-        //printf("status: %d \n", data.status);
-        //printf("gps: 0x%02x 0x%02x 0x%04x 0x%04x\n", d12[0], d12[1], d34[0], d34[1]);
         break;
       }
       case FIELD_GPS_SPACE_VEHICLE_INFORMATION: break;
@@ -613,7 +604,6 @@ void Hg3dmGx4::processEFPacket()
         received_packet_.extract(1, &data.status);
         received_packet_.extract(1, &data.dynamics_mode);
         received_packet_.extract(1, &data.status_flag);
-        //printf("filter status: 0x%04x 0x%04x 0x%04x\n", status[0], status[1], status[2]);
         break;
       }
       case FIELD_EF_GPS_TIMESTAMP: break;
@@ -628,15 +618,10 @@ void Hg3dmGx4::processEFPacket()
       case FIELD_EF_ORIENTATION_QUATERNION:
         received_packet_.extract(4, data.orientation_quaternion);
         data.fields |= EFData::ORIENTATION_QUATERNION;
-        //printf("ef_qua: %8.3f %8.3f %8.3f %8.3f\n", data.orientation_quaternion[0], data.orientation_quaternion[1], data.orientation_quaternion[2], data.orientation_quaternion[3]);
         break;
 
       case FIELD_EF_ORIENTATION_MATRIX: break;
-      case FIELD_EF_ORIENTATION_EULER:
-        //float ryp[3];
-        //received_packet_.extract(3, ryp);
-        //printf("rpy: %8.3f %8.3f %8.3f\n", ryp[0], ryp[1], ryp[2]);
-        break;
+      case FIELD_EF_ORIENTATION_EULER: break;
       case FIELD_EF_GYRO_BIAS: break;
       case FIELD_EF_ACCEL_BIAS: break;
       case FIELD_EF_LLH_POSITION_UNCERTAINTY:
@@ -648,7 +633,6 @@ void Hg3dmGx4::processEFPacket()
         received_packet_.extract(3, data.vel_uncertainty);
         break;
       case FIELD_EF_ALTITUDE_UNCERTAINTY:
-        //printf("Got q error\n");
         received_packet_.extract(4, data.orientation_uncertainty);
         data.fields |= EFData::ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT;
         break;
@@ -665,19 +649,16 @@ void Hg3dmGx4::processEFPacket()
       case FIELD_EF_COMPENSATED_ACCELERATION:
         received_packet_.extract(3, data.compensated_acceleration);
         data.fields |= EFData::COMPENSATED_ACCELERATION;
-        //printf("ef_acc: %8.3f %8.3f %8.3f\n", data.compensated_acceleration[0], data.compensated_acceleration[1], data.compensated_acceleration[2]);
         break;
       case FIELD_EF_COMPENSATED_ANGULAR_RATE:
         received_packet_.extract(3, data.compensated_angular_rate);
         data.fields |= EFData::COMPENSATED_ANGULAR_RATE;
-        //printf("ef_gyr: %8.3f %8.3f %8.3f\n", data.compensated_angular_rate[0], data.compensated_angular_rate[1], data.compensated_angular_rate[2]);
         break;
       case FIELD_EF_WGS84_LOCAL_GRAVITY_MAGNITUDE: break;
       case FIELD_EF_ALTITUDE_UNCERTAINTY_QUATERNION_ELEMENT: break;
       case FIELD_EF_GRAVITY_VECTOR:
-        //received_packet_.extract(3, data.gravity_vector);
-        //data.fields |= EFData::GRAVITY_VECTOR;
-        //printf("ef_grv: %8.3f %8.3f %8.3f\n", data.gravity_vector[0], data.gravity_vector[1], data.gravity_vector[2]);
+        //  received_packet_.extract(3, data.gravity_vector);
+        //  data.fields |= EFData::GRAVITY_VECTOR;
         break;
 
       case FIELD_EF_HEADING_UPDATE_SOURCE_STATE: break;
@@ -691,7 +672,7 @@ void Hg3dmGx4::processEFPacket()
       case FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION: break;
       case FIELD_EF_GPS_ANTENNA_OFFSET_CORRECTION_UNCERTAINTY: break;
       default:
-        //no more data
+        //  no more data
         if (ef_data_callback_)
         {
           ef_data_callback_(data);
@@ -705,13 +686,13 @@ void Hg3dmGx4::processEFPacket()
 
 void Hg3dmGx4::processRespondPacket()
 {
-  //Find ACK/NACK
+  //  Find ACK/NACK
   if(received_packet_.payload[1] == FIELD_ACK_NACK)
   {
     if(received_packet_.payload[3] == 0x00)
     {
-      //Got ACK
-      //std::cout << "Found ACK field" << std::endl;
+      //  Got ACK
+      //  std::cout << "Found ACK field" << std::endl;
     }
     else
     {
