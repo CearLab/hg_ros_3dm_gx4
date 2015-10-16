@@ -3,7 +3,7 @@
     <arg name="output" default="screen"/>
 
     <!-- IMU Settings -->
-    <arg name="device" default="/dev/ttyACM0" />
+    <arg name="device" default="/dev/microstrain" />
 
     <!-- Baudrate of serial comms (see manual for allowed values) -->
     <arg name="baudrate" default="921600"/>
