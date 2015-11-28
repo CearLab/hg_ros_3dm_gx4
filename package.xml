@@ -4,7 +4,7 @@
   <version>0.0.1</version>
   <description>MicroStrain 3DM-GX4-XX driver of ROS</description>
 
-  <maintainer email="mahisorn.w@hiveground.com">mahisorn</maintainer>
+  <maintainer email="tbaltovski@clearpathrobotics.com">Tony Baltovski</maintainer>
   <author>Mahisorn Wongphati</author>
   <license>BSD</license>
 
