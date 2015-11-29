@@ -47,14 +47,14 @@ void publishIMUData(const hg_3dm_gx4::IMUData& data)
   g_raw_imu.orientation.y =  data.orientation_quaternion[0];
   g_raw_imu.orientation.z = -data.orientation_quaternion[2];
 
-  g_raw_mag.magnetic_field.x =  data.scaled_magneto[1] * data.GAUSS_TO_TESLA;
-  g_raw_mag.magnetic_field.y =  data.scaled_magneto[0] * data.GAUSS_TO_TESLA;
-  g_raw_mag.magnetic_field.z = -data.scaled_magneto[2] * data.GAUSS_TO_TESLA;
+  g_raw_mag.magnetic_field.x =  data.scaled_magneto[1] * hg_3dm_gx4::Hg3dmGx4::GAUSS_TO_TESLA;
+  g_raw_mag.magnetic_field.y =  data.scaled_magneto[0] * hg_3dm_gx4::Hg3dmGx4::GAUSS_TO_TESLA;
+  g_raw_mag.magnetic_field.z = -data.scaled_magneto[2] * hg_3dm_gx4::Hg3dmGx4::GAUSS_TO_TESLA;
 
   // In body-fixed frame.
-  g_raw_imu.linear_acceleration.x =  data.scaled_accelerometer[0] * data.G_TO_ACCELERATION;
-  g_raw_imu.linear_acceleration.y = -data.scaled_accelerometer[1] * data.G_TO_ACCELERATION;
-  g_raw_imu.linear_acceleration.z = -data.scaled_accelerometer[2] * data.G_TO_ACCELERATION;
+  g_raw_imu.linear_acceleration.x =  data.scaled_accelerometer[0] * hg_3dm_gx4::Hg3dmGx4::G_TO_ACCELERATION;
+  g_raw_imu.linear_acceleration.y = -data.scaled_accelerometer[1] * hg_3dm_gx4::Hg3dmGx4::G_TO_ACCELERATION;
+  g_raw_imu.linear_acceleration.z = -data.scaled_accelerometer[2] * hg_3dm_gx4::Hg3dmGx4::G_TO_ACCELERATION;
   g_raw_imu.angular_velocity.x =  data.scaled_gyro[0];
   g_raw_imu.angular_velocity.y = -data.scaled_gyro[1];
   g_raw_imu.angular_velocity.z = -data.scaled_gyro[2];

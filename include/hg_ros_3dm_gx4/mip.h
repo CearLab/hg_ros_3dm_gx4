@@ -157,9 +157,6 @@ struct IMUData
     NUM_IMU_DATA = 12
   };
 
-  static const float GAUSS_TO_TESLA = 0.0001;
-  static const float G_TO_ACCELERATION = 9.81;
-
   uint32_t fields;
   float scaled_accelerometer[3];
   float scaled_gyro[3];
@@ -534,8 +531,5 @@ private:
 };
 
 }
-
-
-
 
 #endif /* _HG_3DM_GX4_INCLUDE_HG_3DM_GX4_MIP_H_ */

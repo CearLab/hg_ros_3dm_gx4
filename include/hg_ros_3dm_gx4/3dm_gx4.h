@@ -23,12 +23,10 @@ class Hg3dmGx4 : public hg_ros_serial::Serial
 public:
   Hg3dmGx4()
   {
-
   }
 
   virtual ~Hg3dmGx4()
   {
-
   }
 
 //Base commands
@@ -73,12 +71,13 @@ public:
     ef_data_callback_ = cb;
   }
 
+  static const float GAUSS_TO_TESLA;
+  static const float G_TO_ACCELERATION;
+
 
 protected:
   void sendPacket(const MIP& p, int timeout);
   void sendAndReceivePacket(const MIP& p);
-
-
 
   void processPacket();
   void processIMUPacket();
@@ -86,11 +85,7 @@ protected:
   void processEFPacket();
   void processRespondPacket();
 
-
-
-
   MIP received_packet_;
-
 
   boost::function<void(const IMUData &)> imu_data_callback_;
   boost::function<void(const GPSData &)> gps_data_callback_;
@@ -98,8 +93,6 @@ protected:
 
 };
 
-
 }
-
 
 #endif /* _HG_3DM_GX4_INCLUDE_HG_3DM_GX4_3DM_GX4_H_ */
