@@ -10,6 +10,9 @@
 
 using namespace hg_3dm_gx4;
 
+const float Hg3dmGx4::GAUSS_TO_TESLA = 0.0001;
+const float Hg3dmGx4::G_TO_ACCELERATION = 9.81;
+
 void Hg3dmGx4::ping()
 {
   MIP p(CMD_CLASS_BASE);
