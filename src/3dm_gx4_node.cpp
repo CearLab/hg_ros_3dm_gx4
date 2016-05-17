@@ -135,7 +135,7 @@ void publishEFData(const hg_3dm_gx4::EFData& data)
     g_filtered_vel.twist.twist.linear.z = data.vel[2];
     g_filtered_vel.twist.covariance[0] = data.vel_uncertainty[0];
     g_filtered_vel.twist.covariance[4] = data.vel_uncertainty[1];
-    g_filtered_vel.twist.covariance[8] = data.vel_uncertainty[3];
+    g_filtered_vel.twist.covariance[8] = data.vel_uncertainty[2];
 
     g_pub_filtered_imu.publish(g_filtered_imu);
     g_pub_filtered_fix.publish(g_filtered_fix);
