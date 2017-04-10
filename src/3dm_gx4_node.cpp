@@ -16,6 +16,8 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
 #include <tf/transform_datatypes.h>
+#include <tf/transform_broadcaster.h>
+#include <nav_msgs/Odometry.h>
 
 using namespace std;
 
@@ -42,24 +44,47 @@ void publishIMUData(const hg_3dm_gx4::IMUData& data)
   g_raw_mag.header.frame_id = imu_frame_id;
 
   // In world frame.
-  g_raw_imu.orientation.w =  data.orientation_quaternion[3];
-  g_raw_imu.orientation.x =  data.orientation_quaternion[1];
-  g_raw_imu.orientation.y =  data.orientation_quaternion[0];
-  g_raw_imu.orientation.z = -data.orientation_quaternion[2];
+
+  tf::Quaternion q_ned(data.orientation_quaternion[1],
+                       data.orientation_quaternion[2],
+                       data.orientation_quaternion[3],
+                       data.orientation_quaternion[0]);
+  tf::Matrix3x3 m(q_ned);
+  double roll_ned, pitch_ned, yaw_ned;
+  m.getRPY(roll_ned, pitch_ned, yaw_ned);
+  double roll_enu = roll_ned;
+  double pitch_enu = -pitch_ned;
+  double yaw_enu = -yaw_ned + 1.570796327;
+  geometry_msgs::Quaternion q_enu = tf::createQuaternionMsgFromRollPitchYaw (roll_enu, pitch_enu, yaw_enu);
+  g_raw_imu.orientation = q_enu;
+
+  g_raw_imu.orientation_covariance[0] = 1e-2;
+  g_raw_imu.orientation_covariance[4] = 1e-2;
+  g_raw_imu.orientation_covariance[8] = 1e-2;
 
   g_raw_mag.magnetic_field.x =  data.scaled_magneto[1] * hg_3dm_gx4::Hg3dmGx4::GAUSS_TO_TESLA;
   g_raw_mag.magnetic_field.y =  data.scaled_magneto[0] * hg_3dm_gx4::Hg3dmGx4::GAUSS_TO_TESLA;
   g_raw_mag.magnetic_field.z = -data.scaled_magneto[2] * hg_3dm_gx4::Hg3dmGx4::GAUSS_TO_TESLA;
 
   // In body-fixed frame.
+
   g_raw_imu.linear_acceleration.x =  data.scaled_accelerometer[0] * hg_3dm_gx4::Hg3dmGx4::G_TO_ACCELERATION;
   g_raw_imu.linear_acceleration.y = -data.scaled_accelerometer[1] * hg_3dm_gx4::Hg3dmGx4::G_TO_ACCELERATION;
   g_raw_imu.linear_acceleration.z = -data.scaled_accelerometer[2] * hg_3dm_gx4::Hg3dmGx4::G_TO_ACCELERATION;
+
+  g_raw_imu.linear_acceleration_covariance[0] = 1e-6;
+  g_raw_imu.linear_acceleration_covariance[4] = 1e-6;
+  g_raw_imu.linear_acceleration_covariance[8] = 1e-6;
+
   g_raw_imu.angular_velocity.x =  data.scaled_gyro[0];
   g_raw_imu.angular_velocity.y = -data.scaled_gyro[1];
   g_raw_imu.angular_velocity.z = -data.scaled_gyro[2];
+ 
+  g_raw_imu.angular_velocity_covariance[0] = 1e-6;
+  g_raw_imu.angular_velocity_covariance[4] = 1e-6;
+  g_raw_imu.angular_velocity_covariance[8] = 1e-6;
 
-  g_pub_raw_imu.publish(g_raw_imu);
+    g_pub_raw_imu.publish(g_raw_imu);
   g_pub_raw_mag.publish(g_raw_mag);
 }
 
